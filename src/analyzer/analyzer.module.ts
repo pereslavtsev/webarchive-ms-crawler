@@ -7,11 +7,11 @@ import { ANALYZER_QUEUE } from './analyzer.constants';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: ANALYZER_QUEUE,
-      processors: [join(__dirname, 'processors', 'analyzer.processor.js')],
-    }),
+    // BullModule.registerQueue({
+    //   name: ANALYZER_QUEUE,
+    //   processors: [join(__dirname, 'processors', 'analyzer.processor.js')],
+    // }),
   ],
-  providers: [PageListener],
+  //providers: [PageListener],
 })
 export class AnalyzerModule {}

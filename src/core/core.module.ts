@@ -1,24 +1,31 @@
 import { Global, Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { InjectBot, MwnModule } from 'nest-mwn';
 import { mwn } from 'mwn';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
-import bullConfig from './config/bull.config';
-import mwnConfig from './config/mwn.config';
-import { BullConfigService, MwnConfigService } from './services';
+import * as config from './config';
+import {
+  BullConfigService,
+  MwnConfigService,
+  TypeOrmConfigService,
+} from './services';
 
 @Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [bullConfig, mwnConfig],
+      load: [...Object.values(config)],
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
     MwnModule.forRootAsync({
       useClass: MwnConfigService,
+    }),
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
     }),
     BullModule.forRootAsync({
       useClass: BullConfigService,

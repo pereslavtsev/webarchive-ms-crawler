@@ -1,7 +1,7 @@
 import { Job, DoneCallback } from 'bull';
 import { NestFactory } from '@nestjs/core';
 import { mwn } from 'mwn';
-import { CoreModule } from '../../core';
+import { CoreModule } from '@app/core';
 import { MwnConstants } from 'nest-mwn';
 import { INestApplicationContext } from '@nestjs/common';
 import { WatcherJob } from '../crawler.types';

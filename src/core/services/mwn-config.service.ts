@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MwnModuleOptions, MwnModuleOptionsFactory } from 'nest-mwn';
-import mwnConfig from '../config/mwn.config';
+import { mwn as mwnConfig } from '../config';
 import { ConfigType } from '@nestjs/config';
 
 @Injectable()
