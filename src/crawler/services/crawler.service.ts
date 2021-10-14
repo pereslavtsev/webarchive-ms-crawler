@@ -25,7 +25,7 @@ export class CrawlerService implements OnModuleInit, BeforeApplicationShutdown {
 
   async beforeApplicationShutdown() {
     await this.citeWebQueue.close(true);
-    await this.citeNewsQueue.close(true);
+    //await this.citeNewsQueue.close(true);
   }
 
   async onModuleInit() {
@@ -34,13 +34,24 @@ export class CrawlerService implements OnModuleInit, BeforeApplicationShutdown {
     await this.citeWebQueue.clean(0, 'active');
     await this.citeWebQueue.clean(0, 'delayed');
     await this.citeWebQueue.clean(0, 'failed');
-    await this.citeNewsQueue.empty();
-    await this.citeNewsQueue.clean(0, 'completed');
-    await this.citeNewsQueue.clean(0, 'active');
-    await this.citeNewsQueue.clean(0, 'delayed');
-    await this.citeNewsQueue.clean(0, 'failed');
+    // await this.citeNewsQueue.empty();
+    // await this.citeNewsQueue.clean(0, 'completed');
+    // await this.citeNewsQueue.clean(0, 'active');
+    // await this.citeNewsQueue.clean(0, 'delayed');
+    // await this.citeNewsQueue.clean(0, 'failed');
 
-    await this.citeWebQueue.add(CITE_WEB_WATCHER_PARAMS);
-    await this.citeNewsQueue.add(CITE_NEWS_WATCHER_PARAMS);
+    // await this.citeWebQueue.add(CITE_WEB_WATCHER_PARAMS);
+    // await this.citeNewsQueue.add(CITE_NEWS_WATCHER_PARAMS);
+
+    await this.citeWebQueue.add({
+      action: 'query',
+      generator: 'categorymembers',
+      //gtilimit: '10',
+      gcmtitle: 'Категория:Свободные системы управления сайтами',
+      gcmnamespace: 0,
+      prop: 'revisions',
+      rvslots: 'main',
+      rvprop: ['ids', 'content'],
+    });
   }
 }

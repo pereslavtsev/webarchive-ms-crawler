@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Task } from './task.model';
-import { SourceStatus } from '../enums/source-status.enum';
+import { SourceStatus } from '../enums';
 
 @Entity('sources')
 export class Source {
@@ -30,7 +30,13 @@ export class Source {
   archiveUrl: string | null;
 
   @Column({ nullable: true })
-  archiveDate: string | null;
+  archiveDate: Date | null;
+
+  @Column({ nullable: true })
+  revisionDate: Date | null;
+
+  @Column({ nullable: true })
+  revisionId: number | null;
 
   @Column({
     enum: SourceStatus,

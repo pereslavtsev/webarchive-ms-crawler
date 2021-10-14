@@ -4,10 +4,12 @@ import { BullModule } from '@nestjs/bull';
 import { CRAWLER_PROCESSOR } from './crawler.constants';
 import * as consumers from './consumers';
 import { TasksModule } from '../tasks';
+import { MatcherModule } from '@app/matcher';
 
 @Module({
   imports: [
     TasksModule,
+    MatcherModule,
     BullModule.registerQueue(
       {
         name: 'cite_web',

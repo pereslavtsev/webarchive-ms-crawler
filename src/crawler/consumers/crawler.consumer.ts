@@ -5,6 +5,7 @@ import { ApiPage } from 'mwn';
 import { Injectable } from '@nestjs/common';
 import { TasksService } from '@app/tasks';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
+import { InjectMatcherQueue, MatcherQueue } from '@app/matcher';
 
 @Injectable()
 export class CrawlerConsumer {
@@ -14,6 +15,8 @@ export class CrawlerConsumer {
     private eventEmitter: EventEmitter2,
     private tasksService: TasksService,
     @RootLogger() rootLogger: Bunyan,
+    @InjectMatcherQueue()
+    private matcherQueue: MatcherQueue,
   ) {
     this.log = rootLogger.child({ component: this.constructor.name });
   }
@@ -21,7 +24,10 @@ export class CrawlerConsumer {
   @OnQueueProgress()
   async progress(job: Job, pages: ApiPage[]) {
     this.log.info('received pages:', ...pages.map((p) => p.title));
-    await this.tasksService.create(...pages);
+    const tasks = await this.tasksService.create(...pages);
+    await this.matcherQueue.addBulk(
+      tasks.filter((task) => !task.skipped).map((task) => ({ data: { task } })),
+    );
 
     // pages.forEach((page) =>
     //   this.eventEmitter.emit('page.received', {

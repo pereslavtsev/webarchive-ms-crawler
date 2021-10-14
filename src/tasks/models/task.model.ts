@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TaskStatus } from '../enums/task-status.enum';
+import { TaskStatus } from '../enums';
 import { Source } from './source.model';
 
 @Entity('tasks')
@@ -30,7 +30,14 @@ export class Task {
   })
   status!: TaskStatus;
 
-  @OneToMany(() => Source, (source) => source.task, { cascade: true })
+  get skipped() {
+    return this.status === TaskStatus.SKIPPED;
+  }
+
+  @OneToMany(() => Source, (source) => source.task, {
+    cascade: true,
+    eager: true,
+  })
   sources: Source[];
 
   @CreateDateColumn()

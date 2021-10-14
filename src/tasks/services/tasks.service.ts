@@ -52,6 +52,6 @@ export class TasksService {
 
   async create(...pages: ApiPage[]) {
     const tasks = pages.map((page) => this.createByPage(page));
-    await this.tasksRepository.save(tasks);
+    return this.tasksRepository.save(tasks);
   }
 }

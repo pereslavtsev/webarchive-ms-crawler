@@ -19,8 +19,11 @@ export default async function (job: CrawlerJob, cb: DoneCallback) {
     }
 
     const bot = app.get<mwn>(MwnConstants.MWN_INSTANCE);
-    for await (const { query } of bot.continuedQueryGen(job.data)) {
-      await job.progress(query.pages);
+    for await (const json of bot.continuedQueryGen(job.data)) {
+      if (!json.continue) {
+        break;
+      }
+      await job.progress(json.query.pages);
     }
     cb(null, '55It works');
   } catch (error) {
