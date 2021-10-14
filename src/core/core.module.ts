@@ -5,17 +5,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InjectBot, MwnModule } from 'nest-mwn';
 import { mwn } from 'mwn';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { LoggingModule } from '@eropple/nestjs-bunyan';
 
 import * as config from './config';
 import {
   BullConfigService,
+  Logger,
   MwnConfigService,
   TypeOrmConfigService,
 } from './services';
+import { LOGGER } from './logger';
 
 @Global()
 @Module({
   imports: [
+    LoggingModule.forRoot(LOGGER, {}),
     ConfigModule.forRoot({
       load: [...Object.values(config)],
       isGlobal: true,
@@ -31,7 +35,8 @@ import {
       useClass: BullConfigService,
     }),
   ],
-  exports: [BullModule, MwnModule],
+  providers: [Logger],
+  exports: [BullModule, MwnModule, Logger],
 })
 export class CoreModule implements OnModuleInit {
   constructor(

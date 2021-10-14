@@ -1,26 +1,30 @@
 import { Job, DoneCallback } from 'bull';
 import { NestFactory } from '@nestjs/core';
 import { mwn } from 'mwn';
-import { CoreModule } from '@app/core';
+import { CoreModule, Logger } from '@app/core';
 import { MwnConstants } from 'nest-mwn';
 import { INestApplicationContext } from '@nestjs/common';
-import { WatcherJob } from '../crawler.types';
+import { CrawlerJob } from '../crawler.types';
 
 let app: INestApplicationContext;
+let log: Logger;
 
-export default async function (job: WatcherJob, cb: DoneCallback) {
+export default async function (job: CrawlerJob, cb: DoneCallback) {
   try {
-    console.log('mwn2', 111);
-    app = await NestFactory.createApplicationContext(CoreModule);
+    if (!app) {
+      app = await NestFactory.createApplicationContext(CoreModule, {
+        logger: new Logger(),
+      });
+      log = app.get(Logger);
+    }
+
     const bot = app.get<mwn>(MwnConstants.MWN_INSTANCE);
     for await (const { query } of bot.continuedQueryGen(job.data)) {
-      console.log(`[${process.pid}] ${JSON.stringify(job.data)}`);
-      //console.log('query.pages', query.pages);
       await job.progress(query.pages);
     }
     cb(null, '55It works');
   } catch (error) {
-    console.log('error', error);
+    log.error('error', error);
   } finally {
     await app.close();
   }

@@ -1,5 +1,5 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { WatcherJob } from '../../crawler/crawler.types';
+import { CrawlerJob } from '../../crawler/crawler.types';
 import { DoneCallback } from 'bull';
 import { NestFactory } from '@nestjs/core';
 import { CoreModule } from '../../core';

@@ -17,8 +17,10 @@ export class CiteTemplatesService {
     return t.archiveUrlParamAliases.some((param) => template.getParam(param));
   }
 
-  hasUrl(template: Template): boolean {
+  getUrlValue(template: Template): string {
     const t = this.findByName(template.name as string);
-    return t.urlParamAliases.some((param) => template.getParam(param));
+    return t.urlParamAliases
+      .map((param) => template.getValue(param))
+      .find((v) => !!v);
   }
 }
