@@ -9,17 +9,24 @@ import {
   CITE_NEWS_WATCHER_PARAMS,
   CITE_WEB_WATCHER_PARAMS,
 } from '../mocks/watchers.mock';
+import { CoreProvider } from '@app/core';
+import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
-export class CrawlerService implements OnModuleInit, BeforeApplicationShutdown {
+export class CrawlerService
+  extends CoreProvider
+  implements OnModuleInit, BeforeApplicationShutdown
+{
   private queues: Queue[];
 
   constructor(
+    @RootLogger() rootLogger: Bunyan,
     @InjectQueue('cite_web')
     private citeWebQueue: Queue,
     @InjectQueue('cite_news')
     private citeNewsQueue: Queue,
   ) {
+    super(rootLogger);
     this.queues = [this.citeWebQueue, this.citeNewsQueue];
   }
 

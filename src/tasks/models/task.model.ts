@@ -1,19 +1,10 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { TaskStatus } from '../enums';
 import { Source } from './source.model';
+import { BaseModel } from './base.model';
 
 @Entity('tasks')
-export class Task {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class Task extends BaseModel {
   @Column()
   pageTitle!: string;
 
@@ -39,10 +30,4 @@ export class Task {
     eager: true,
   })
   sources: Source[];
-
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
 }

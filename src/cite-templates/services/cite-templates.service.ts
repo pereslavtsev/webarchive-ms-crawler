@@ -3,10 +3,16 @@ import { Template } from 'mwn';
 
 import { CiteTemplate } from '../interfaces';
 import { TEMPLATES } from '../mocks/cite-templates.mock';
+import { CoreProvider } from '@app/core';
+import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
-export class CiteTemplatesService {
+export class CiteTemplatesService extends CoreProvider {
   private readonly data = TEMPLATES;
+
+  constructor(@RootLogger() rootLogger: Bunyan) {
+    super(rootLogger);
+  }
 
   findByName(name: string): CiteTemplate {
     return this.data.find((t) => t.name === name.toLowerCase());

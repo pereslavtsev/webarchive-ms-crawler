@@ -4,13 +4,21 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ConfigType } from '@nestjs/config';
 
 import { database } from '../config';
+import { CoreProvider } from '../core.provider';
+import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
-export class TypeOrmConfigService implements TypeOrmOptionsFactory {
+export class TypeOrmConfigService
+  extends CoreProvider
+  implements TypeOrmOptionsFactory
+{
   constructor(
+    @RootLogger() rootLogger: Bunyan,
     @Inject(database.KEY)
     private dbConfig: ConfigType<typeof database>,
-  ) {}
+  ) {
+    super(rootLogger);
+  }
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from "@nestjs/common";
 import { CrawlerService } from './services/crawler.service';
 import { BullModule } from '@nestjs/bull';
 import { CRAWLER_PROCESSOR } from './crawler.constants';
@@ -8,7 +8,7 @@ import { MatcherModule } from '@app/matcher';
 
 @Module({
   imports: [
-    TasksModule,
+    forwardRef(() => TasksModule),
     MatcherModule,
     BullModule.registerQueue(
       {

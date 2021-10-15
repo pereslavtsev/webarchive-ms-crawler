@@ -2,19 +2,16 @@ import { Process, Processor } from '@nestjs/bull';
 import { MATCHER_QUEUE } from '../matcher.constants';
 import { MatcherService } from '../services';
 import { MatcherJob } from '../matcher.types';
-import { InjectSourcesRepository, Source } from '@app/tasks';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
-import { Repository } from 'typeorm';
+import { CoreProvider } from '@app/core';
 
 @Processor(MATCHER_QUEUE)
-export class MatcherConsumer {
-  private readonly log: Bunyan;
-
+export class MatcherConsumer extends CoreProvider {
   constructor(
     private matcherService: MatcherService,
     @RootLogger() rootLogger: Bunyan,
   ) {
-    this.log = rootLogger.child({ component: this.constructor.name });
+    super(rootLogger);
   }
 
   @Process({ concurrency: 5 })

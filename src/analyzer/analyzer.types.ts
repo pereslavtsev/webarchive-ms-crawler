@@ -1,5 +1,5 @@
-import { Job, Queue } from 'bull';
-import { PageReceivedEvent } from '../core';
+import type { Job, Queue } from 'bull';
+import type { Source, Task } from '@app/tasks';
 
-export type AnalyzerJob = Job<{ page: PageReceivedEvent['data'] }>;
-export type AnalyzerQueue = Queue<{ page: PageReceivedEvent['data'] }>;
+export type AnalyzerJob = Job<{ source: Source; task: Task }>;
+export type AnalyzerQueue = Queue<{ source: Source; task: Task }>;

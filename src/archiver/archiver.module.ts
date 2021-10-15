@@ -1,5 +1,6 @@
 import {
   BeforeApplicationShutdown,
+  forwardRef,
   Module,
   OnModuleInit,
 } from '@nestjs/common';
@@ -9,9 +10,13 @@ import { ArchiverQueue } from './archiver.types';
 import { ARCHIVER_QUEUE } from './archiver.constants';
 import { MementoModule } from '@app/memento';
 import { ArchiverConsumer } from './consumers';
+import { TasksModule } from '@app/tasks';
+import { AnalyzerModule } from "@app/analyzer";
 
 @Module({
   imports: [
+    forwardRef(() => TasksModule),
+    forwardRef(() => AnalyzerModule),
     MementoModule,
     BullModule.registerQueue({
       name: ARCHIVER_QUEUE,

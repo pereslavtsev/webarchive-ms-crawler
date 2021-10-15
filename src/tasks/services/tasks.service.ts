@@ -5,17 +5,21 @@ import { SourcesService } from './sources.service';
 import { InjectBot } from 'nest-mwn';
 import { CiteTemplatesService } from '@app/cite-templates';
 import { Repository } from 'typeorm';
+import { CoreProvider } from '@app/core';
+import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
-export class TasksService {
+export class TasksService extends CoreProvider {
   constructor(
-    @InjectBot()
-    private bot: mwn,
+    @RootLogger() rootLogger: Bunyan,
+    @InjectBot() private bot: mwn,
     private citeTemplatesService: CiteTemplatesService,
     private sourcesService: SourcesService,
     @InjectTasksRepository()
     private tasksRepository: Repository<Task>,
-  ) {}
+  ) {
+    super(rootLogger);
+  }
 
   createByPage(page: ApiPage): Task {
     const [latestRevision] = page.revisions;

@@ -15,6 +15,5 @@ export class PageListener {
   @OnEvent('page.received')
   async handlePageReceivedEvent(event: PageReceivedEvent) {
     //console.log('event2', event);
-    await this.analyzerQueue.add({ page: event.data });
   }
 }

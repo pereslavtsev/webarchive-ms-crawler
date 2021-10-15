@@ -3,16 +3,22 @@ import { SourceStatus, Task } from '@app/tasks';
 import { ApiPage, mwn } from 'mwn';
 import { InjectBot } from 'nest-mwn';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CoreProvider } from '@app/core';
+import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
-export class MatcherService {
+export class MatcherService extends CoreProvider {
   constructor(
+    @RootLogger() rootLogger: Bunyan,
     @InjectBot()
     private bot: mwn,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) {
+    super(rootLogger);
+  }
 
-  async matchSources({ sources, pageId, revisionId }: Task) {
+  async matchSources(task: Task) {
+    const { sources, pageId, revisionId } = task;
     // iterate over the page revisions
     for await (const { query } of this.bot.continuedQueryGen({
       action: 'query',
@@ -51,7 +57,10 @@ export class MatcherService {
         }
 
         if (matchedSources.length) {
-          this.eventEmitter.emit('source.matched', matchedSources);
+          this.eventEmitter.emit('source.matched', {
+            task,
+            sources: matchedSources,
+          });
         }
       }
     }

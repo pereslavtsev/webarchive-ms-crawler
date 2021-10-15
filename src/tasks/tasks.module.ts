@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module, OnModuleInit } from "@nestjs/common";
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as models from './models';
 import * as services from './services';
@@ -11,7 +11,7 @@ import { ArchiverModule } from '@app/archiver';
 
 @Module({
   imports: [
-    ArchiverModule,
+    forwardRef(() => ArchiverModule),
     TypeOrmModule.forFeature([...Object.values(models)]),
     CiteTemplatesModule,
   ],

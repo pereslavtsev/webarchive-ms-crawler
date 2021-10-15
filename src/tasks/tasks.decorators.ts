@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Source, Task } from './models';
+import { Source, Task, Memento } from './models';
 import { OnEvent } from '@nestjs/event-emitter';
 
 export function InjectTasksRepository() {
@@ -8,6 +8,10 @@ export function InjectTasksRepository() {
 
 export function InjectSourcesRepository() {
   return InjectRepository(Source);
+}
+
+export function InjectMementosRepository() {
+  return InjectRepository(Memento);
 }
 
 export function OnSourceMatched() {

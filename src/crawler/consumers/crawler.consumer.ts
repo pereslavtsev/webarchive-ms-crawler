@@ -6,11 +6,10 @@ import { Injectable } from '@nestjs/common';
 import { TasksService } from '@app/tasks';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { InjectMatcherQueue, MatcherQueue } from '@app/matcher';
+import { CoreProvider } from '@app/core';
 
 @Injectable()
-export class CrawlerConsumer {
-  private readonly log: Bunyan;
-
+export abstract class CrawlerConsumer extends CoreProvider {
   constructor(
     private eventEmitter: EventEmitter2,
     private tasksService: TasksService,
@@ -18,7 +17,7 @@ export class CrawlerConsumer {
     @InjectMatcherQueue()
     private matcherQueue: MatcherQueue,
   ) {
-    this.log = rootLogger.child({ component: this.constructor.name });
+    super(rootLogger);
   }
 
   @OnQueueProgress()

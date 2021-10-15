@@ -1,19 +1,11 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Task } from './task.model';
 import { SourceStatus } from '../enums';
+import { BaseModel } from './base.model';
+import { Memento } from './memento.model';
 
 @Entity('sources')
-export class Source {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class Source extends BaseModel {
   @Column()
   url!: string;
 
@@ -45,12 +37,15 @@ export class Source {
   })
   status!: SourceStatus;
 
-  @ManyToOne(() => Task, (task) => task.sources, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Task, (task) => task.sources, {
+    onDelete: 'CASCADE',
+    lazy: true,
+  })
   task: Task;
 
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
+  @OneToMany(() => Memento, (memento) => memento.source, {
+    cascade: true,
+    eager: true,
+  })
+  mementos: Memento[];
 }

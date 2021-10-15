@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: "webarchiver-db"
+    image: "postgres:13-alpine"
+    environment:
+      - POSTGRES_PASSWORD=webarchiver
+      - POSTGRES_USER=webarchiver
+      - POSTGRES_DB=webarchiver
+    tty: true
+  redis:
+    container_name: "webarchiver-redis"
+    image: "redis:alpine"
+    tty: true
+  core:
+    container_name: "webarchiver-core"
+    build: .
+    environment:
+      - DATABASE_URL=postgres://webarchiver:webarchiver@db:5432/webarchiver
+      - REDIS_URL=redis://redis:6379
+      - BOT_USERNAME=${BOT_USERNAME}
+      - BOT_PASSWORD=${BOT_PASSWORD}
+    depends_on:
+      - db
+      - redis
+    tty: true
