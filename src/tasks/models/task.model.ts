@@ -21,10 +21,6 @@ export class Task extends BaseModel {
   })
   status!: TaskStatus;
 
-  get skipped() {
-    return this.status === TaskStatus.SKIPPED;
-  }
-
   @OneToMany(() => Source, (source) => source.task, {
     cascade: true,
     eager: true,

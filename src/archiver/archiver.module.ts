@@ -1,29 +1,26 @@
 import {
   BeforeApplicationShutdown,
-  forwardRef,
   Module,
   OnModuleInit,
 } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
-import { InjectArchiverQueue } from './archiver.decorators';
-import { ArchiverQueue } from './archiver.types';
-import { ARCHIVER_QUEUE } from './archiver.constants';
 import { MementoModule } from '@app/memento';
+
+import { ArchiverQueue } from './archiver.types';
+import { InjectArchiverQueue } from './archiver.decorators';
 import { ArchiverConsumer } from './consumers';
-import { TasksModule } from '@app/tasks';
-import { AnalyzerModule } from "@app/analyzer";
+import { ArchiverService } from './services';
+import { ARCHIVER_QUEUE } from './archiver.constants';
 
 @Module({
   imports: [
-    forwardRef(() => TasksModule),
-    forwardRef(() => AnalyzerModule),
     MementoModule,
     BullModule.registerQueue({
       name: ARCHIVER_QUEUE,
     }),
   ],
-  providers: [ArchiverConsumer],
-  exports: [BullModule],
+  providers: [ArchiverConsumer, ArchiverService],
+  exports: [ArchiverService],
 })
 export class ArchiverModule implements OnModuleInit, BeforeApplicationShutdown {
   constructor(

@@ -7,6 +7,8 @@ export const TEMPLATES: CiteTemplate[] = [
     archiveUrlParam: 'archive-url',
     archiveUrlParamAliases: ['archive-url', 'archiveurl'],
     archiveDateParam: 'archive-date',
+    deadLinkParam: 'deadlink',
+    deadLinkParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
   },
   {
     name: 'cite news',

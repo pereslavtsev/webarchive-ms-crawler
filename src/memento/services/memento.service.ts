@@ -3,10 +3,9 @@ import { HttpService } from '@nestjs/axios';
 import { DateTime } from 'luxon';
 import { MEMENTO_DATE_FORMAT } from '../memento.constants';
 import { GetMementosResponse } from '../classes/get-mementos.class';
-import type { AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import { CoreProvider } from '@app/core';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
-import { StatusCodes } from 'http-status-codes';
 
 @Injectable()
 export class MementoService extends CoreProvider {

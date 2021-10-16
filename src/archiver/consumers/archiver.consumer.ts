@@ -5,29 +5,24 @@ import { ArchiverJob } from '../archiver.types';
 import { MementoService } from '@app/memento/services';
 import { CoreProvider } from '@app/core';
 import { Memento } from '@app/tasks/models/memento.model';
-import { Repository } from 'typeorm';
-import { InjectSourcesRepository, Source } from '@app/tasks';
-import { AxiosError } from 'axios';
+import type { SourceArchivedEvent } from '@app/tasks';
+import type { AxiosError } from 'axios';
 import { StatusCodes } from 'http-status-codes';
-import { InjectArchiverQueue } from '@app/archiver';
-import { AnalyzerQueue } from '@app/analyzer/analyzer.types';
-import { InjectAnalyzerQueue } from '@app/analyzer/analyzer.decorators';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Processor(ARCHIVER_QUEUE)
 export class ArchiverConsumer extends CoreProvider {
   constructor(
     @RootLogger() rootLogger: Bunyan,
     private mementoService: MementoService,
-    @InjectSourcesRepository()
-    private sourcesRepository: Repository<Source>,
-    @InjectAnalyzerQueue()
-    private analyzerQueue: AnalyzerQueue,
+    private eventEmitter: EventEmitter2,
   ) {
     super(rootLogger);
   }
 
   @Process()
   async archive(job: ArchiverJob) {
+    const log = this.log.child({ reqId: job.id });
     try {
       const {
         data: { source, task },
@@ -38,28 +33,49 @@ export class ArchiverConsumer extends CoreProvider {
         const {
           mementos: { closest },
         } = await this.mementoService.get(url, revisionDate);
+
         if (!closest) {
-          console.log('error', '!!!');
+          log.error('no closest mementos was found');
+          await job.moveToFailed({
+            message: 'no closest mementos was found',
+          });
+          return;
         }
+
         source.mementos = closest.uri.map((uri) => {
           const memento = new Memento();
           memento.uri = uri;
           memento.archivedDate = new Date(closest.datetime);
           return memento;
         });
-        const s = await this.sourcesRepository.save(source);
-        await this.analyzerQueue.add({ source: s, task });
+        log.info(
+          { url: closest.uri },
+          `${closest.uri.length} closest mementos was found for url, moving to archived...`,
+        );
+
+        this.eventEmitter.emit('source.archived', {
+          source,
+          task,
+        } as SourceArchivedEvent);
       } catch (error) {
         const errorResponse = error as AxiosError;
         switch (errorResponse.response.status) {
           case StatusCodes.TOO_MANY_REQUESTS: {
-            this.log.error('too many requests');
-            await job.retry();
+            log.error('too many requests');
+            await job.queue.add(job.data);
+            break;
+          }
+          default: {
+            log.error(error);
+            this.eventEmitter.emit('source.failed', {
+              source,
+              task,
+            });
           }
         }
       }
     } catch (error) {
-      this.log.error(error);
+      log.error(error);
     }
   }
 }

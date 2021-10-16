@@ -23,6 +23,18 @@ export class CiteTemplatesService extends CoreProvider {
     return t.archiveUrlParamAliases.some((param) => template.getParam(param));
   }
 
+  isDead(template: Template, content: string): boolean {
+    const t = this.findByName(template.name as string);
+    const dead = t.deadLinkParamAliases?.some(
+      (param) => template.getValue(param) === 'yes',
+    );
+    const [, after] = content.split(template.wikitext);
+    const marked = after.match(
+      /^{{(недоступная ссылка|мёртвая ссылка|битая ссылка|deadlink|dead link)/i,
+    );
+    return dead ?? !!marked;
+  }
+
   getUrlValue(template: Template): string {
     const t = this.findByName(template.name as string);
     return t.urlParamAliases

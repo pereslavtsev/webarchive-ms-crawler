@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Task } from './task.model';
 import { SourceStatus } from '../enums';
 import { BaseModel } from './base.model';
@@ -8,6 +8,9 @@ import { Memento } from './memento.model';
 export class Source extends BaseModel {
   @Column()
   url!: string;
+
+  @Column({ type: 'boolean', default: false })
+  deadLink!: boolean;
 
   @Column({ nullable: true })
   title!: string | null;
@@ -41,6 +44,7 @@ export class Source extends BaseModel {
     onDelete: 'CASCADE',
     lazy: true,
   })
+  @JoinColumn()
   task: Task;
 
   @OneToMany(() => Memento, (memento) => memento.source, {

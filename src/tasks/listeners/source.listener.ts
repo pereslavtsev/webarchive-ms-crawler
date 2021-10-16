@@ -1,28 +1,80 @@
 import { Injectable } from '@nestjs/common';
-import { InjectSourcesRepository, OnSourceMatched, Source } from '@app/tasks';
-import { Repository } from 'typeorm';
-import { ArchiverQueue, InjectArchiverQueue } from '@app/archiver';
+import { In, Not, Repository } from 'typeorm';
 import { CoreProvider } from '@app/core';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
-import type { SourcesMatchedEvent } from '@app/tasks';
+import { ArchiverService } from '@app/archiver';
+import { AnalyzerService } from '@app/analyzer';
+import { Queue } from 'bull';
+
+import {
+  InjectSourcesRepository,
+  InjectWriterQueue,
+  OnSourceArchived,
+  OnSourceChecked,
+  OnSourceFailed,
+  OnSourceMatched,
+} from '../tasks.decorators';
+import { SourceStatus } from '../enums';
+import type {
+  SourceArchivedEvent,
+  SourceCheckedEvent,
+  SourcesMatchedEvent,
+} from '../events';
+import type { Source } from '../models';
+import { Task } from '../models';
+import { TasksService } from '../services';
 
 @Injectable()
 export class SourceListener extends CoreProvider {
   constructor(
     @RootLogger() rootLogger: Bunyan,
+    @InjectWriterQueue()
+    private writerQueue: Queue<Task>,
     @InjectSourcesRepository()
-    private sourceRepository: Repository<Source>,
-    @InjectArchiverQueue()
-    private archiverQueue: ArchiverQueue,
+    private sourcesRepository: Repository<Source>,
+    private analyzerService: AnalyzerService,
+    private archiverService: ArchiverService,
+    private tasksService: TasksService,
   ) {
     super(rootLogger);
   }
 
   @OnSourceMatched()
   async handleSourcesMatchedEvent({ sources, task }: SourcesMatchedEvent) {
-    const updatedSources = await this.sourceRepository.save(sources);
-    await this.archiverQueue.addBulk(
-      updatedSources.map((source) => ({ data: { source, task } })),
-    );
+    const updatedSources = await this.sourcesRepository.save(sources);
+    await this.archiverService.submit(task, updatedSources);
+  }
+
+  @OnSourceArchived()
+  async handleSourceArchived({ source, task }: SourceArchivedEvent) {
+    source.status = SourceStatus.ARCHIVED;
+    const updatedSource = await this.sourcesRepository.save(source);
+    await this.analyzerService.submit(task, updatedSource);
+  }
+
+  @OnSourceFailed()
+  async handleSourceFailed({ source }: SourceArchivedEvent) {
+    source.status = SourceStatus.FAILED;
+    await this.sourcesRepository.save(source);
+  }
+
+  @OnSourceChecked()
+  async handleSourceChecked({ source, task }: SourceCheckedEvent) {
+    const checkedMemento = source.mementos.find((memento) => memento.checked);
+    source.status = SourceStatus.CHECKED;
+    source.archiveUrl = checkedMemento.uri;
+    source.archiveDate = checkedMemento.archivedDate;
+    await this.sourcesRepository.save(source);
+    const unchecked = await this.sourcesRepository.count({
+      where: {
+        task,
+        status: Not(In([SourceStatus.CHECKED, SourceStatus.FAILED])),
+      },
+    });
+    if (!unchecked) {
+      const updatedTask = await this.tasksService.setReady(task.id);
+      await this.writerQueue.add(updatedTask, { jobId: `task_${task.id}` });
+    }
+    // console.log('unchecked', task.pageTitle, unchecked);
   }
 }

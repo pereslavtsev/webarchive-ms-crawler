@@ -1,3 +1,2 @@
-export * from './archiver.decorators';
-export * from './archiver.types';
+export { ArchiverService } from './services';
 export * from './archiver.module';

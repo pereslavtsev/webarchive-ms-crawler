@@ -34,6 +34,8 @@ export class TasksService extends CoreProvider {
       templatePredicate: (template) => {
         const archived = this.citeTemplatesService.isArchived(template);
         const url = this.citeTemplatesService.getUrlValue(template);
+        const dead = this.citeTemplatesService.isDead(template, content);
+        console.log('dead', dead);
         return !archived && !!url; // unarchived sources with url
       },
     });
@@ -57,5 +59,11 @@ export class TasksService extends CoreProvider {
   async create(...pages: ApiPage[]) {
     const tasks = pages.map((page) => this.createByPage(page));
     return this.tasksRepository.save(tasks);
+  }
+
+  async setReady(taskId: Task['id']) {
+    const task = await this.tasksRepository.findOneOrFail(taskId);
+    task.status = TaskStatus.READY_TO_DEPLOY;
+    return this.tasksRepository.save(task);
   }
 }

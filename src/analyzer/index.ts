@@ -1,2 +1,2 @@
-export * from './analyzer.decorators';
+export { AnalyzerService } from './services';
 export * from './analyzer.module';

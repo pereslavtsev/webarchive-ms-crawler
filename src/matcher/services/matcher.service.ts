@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { SourceStatus, Task } from '@app/tasks';
+import { SourceStatus, Task, TaskStatus } from '@app/tasks';
 import { ApiPage, mwn } from 'mwn';
 import { InjectBot } from 'nest-mwn';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CoreProvider } from '@app/core';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
+import { MatcherQueue } from '../matcher.types';
+import { InjectMatcherQueue } from '../matcher.decorators';
 
 @Injectable()
 export class MatcherService extends CoreProvider {
@@ -13,8 +15,21 @@ export class MatcherService extends CoreProvider {
     @InjectBot()
     private bot: mwn,
     private eventEmitter: EventEmitter2,
+    @InjectMatcherQueue()
+    private matcherQueue: MatcherQueue,
   ) {
     super(rootLogger);
+  }
+
+  async submit(...tasks: Task[]) {
+    await this.matcherQueue.addBulk(
+      tasks
+        .filter((task) => task.status !== TaskStatus.SKIPPED)
+        .map((task) => ({
+          data: { task },
+          opts: { jobId: `task_${task.id}` },
+        })),
+    );
   }
 
   async matchSources(task: Task) {
