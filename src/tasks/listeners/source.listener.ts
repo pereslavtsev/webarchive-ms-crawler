@@ -23,6 +23,7 @@ import type {
 import type { Source } from '../models';
 import { Task } from '../models';
 import { TasksService } from '../services';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class SourceListener extends CoreProvider {
@@ -35,6 +36,7 @@ export class SourceListener extends CoreProvider {
     private analyzerService: AnalyzerService,
     private archiverService: ArchiverService,
     private tasksService: TasksService,
+    private eventEmitter: EventEmitter2,
   ) {
     super(rootLogger);
   }
@@ -53,9 +55,55 @@ export class SourceListener extends CoreProvider {
   }
 
   @OnSourceFailed()
-  async handleSourceFailed({ source }: SourceArchivedEvent) {
+  async handleSourceFailed({ source, task }: SourceArchivedEvent) {
     source.status = SourceStatus.FAILED;
     await this.sourcesRepository.save(source);
+    this.eventEmitter.emit('source.processed', { task });
+  }
+
+  @OnEvent('source.processed')
+  async handleSourceProcessed({ task }) {
+    const unchecked = await this.sourcesRepository.count({
+      where: {
+        task,
+        status: Not(
+          In([
+            SourceStatus.CHECKED,
+            SourceStatus.FAILED,
+            SourceStatus.UNVERIFIABLE,
+          ]),
+        ),
+      },
+    });
+    this.log.debug(
+      `${unchecked}/${task.sources.length} unchecked sources for page "${task.pageTitle}"`,
+    );
+    if (!unchecked) {
+      const checked = await this.sourcesRepository.count({
+        where: {
+          task,
+          status: SourceStatus.CHECKED,
+        },
+      });
+      if (!checked) {
+        this.log.error('no checked sources has been found, set as failed');
+        await this.tasksService.setFailed(task.id);
+        return;
+      }
+      try {
+        const updatedTask = await this.tasksService.setReady(task.id);
+        await this.writerQueue.add(updatedTask, { jobId: `task_${task.id}` });
+      } catch (error) {
+        this.log.error(error, task);
+      }
+    }
+  }
+
+  @OnEvent('source.unverifiable')
+  async handleSourceUnverifiable({ source, task }) {
+    source.status = SourceStatus.UNVERIFIABLE;
+    await this.sourcesRepository.save(source);
+    this.eventEmitter.emit('source.processed', { task });
   }
 
   @OnSourceChecked()
@@ -65,16 +113,7 @@ export class SourceListener extends CoreProvider {
     source.archiveUrl = checkedMemento.uri;
     source.archiveDate = checkedMemento.archivedDate;
     await this.sourcesRepository.save(source);
-    const unchecked = await this.sourcesRepository.count({
-      where: {
-        task,
-        status: Not(In([SourceStatus.CHECKED, SourceStatus.FAILED])),
-      },
-    });
-    if (!unchecked) {
-      const updatedTask = await this.tasksService.setReady(task.id);
-      await this.writerQueue.add(updatedTask, { jobId: `task_${task.id}` });
-    }
+    this.eventEmitter.emit('source.processed', { task });
     // console.log('unchecked', task.pageTitle, unchecked);
   }
 }

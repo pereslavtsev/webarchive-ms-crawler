@@ -3,5 +3,6 @@ export enum SourceStatus {
   MATCHED = 'MATCHED',
   ARCHIVED = 'ARCHIVED',
   FAILED = 'FAILED',
+  UNVERIFIABLE = 'UNVERIFIABLE',
   CHECKED = 'CHECKED',
 }

@@ -7,6 +7,8 @@ import type { Memento } from '@app/tasks';
 
 import { ANALYZER_QUEUE } from '../analyzer.constants';
 import type { AnalyzerJob } from '../analyzer.types';
+import { AxiosError } from 'axios';
+import UserAgent from 'user-agents';
 
 @Processor(ANALYZER_QUEUE)
 export class AnalyzerConsumer extends CoreProvider {
@@ -16,14 +18,20 @@ export class AnalyzerConsumer extends CoreProvider {
     private eventEmitter: EventEmitter2,
   ) {
     super(rootLogger);
+    this.httpService.axiosRef.interceptors.request.use((config) => {
+      config.headers['User-Agent'] = new UserAgent();
+      return config;
+    });
   }
 
   async check(title: string, memento: Memento): Promise<boolean> {
     const { data } = await this.httpService.axiosRef.get<string>(memento.uri);
     const res = data.match(new RegExp(title, 'ig'));
-    // if (!res) {
-    //   this.log.error('Finding "' + title + '" in ' + memento.uri);
-    // }
+    if (!res) {
+      // this.log.error('Finding "' + title + '" in ' + memento.uri);
+      // console.log('res', res, new RegExp(title, 'ig'));
+      // console.log(data);
+    }
     return !!res;
   }
 
@@ -35,19 +43,32 @@ export class AnalyzerConsumer extends CoreProvider {
       const { mementos, url } = source;
 
       for (const memento of mementos) {
-        const checked = await this.check(task.pageTitle, memento);
-        if (checked) {
-          memento.checked = true;
-          log.debug(
-            { url: memento.uri },
-            'memento has been checked, moving to write...',
-          );
-          this.eventEmitter.emit('source.checked', { source, task });
-          return;
+        try {
+          const checked = await this.check(task.pageTitle, memento);
+          if (checked) {
+            memento.checked = true;
+            log.debug(
+              { url: memento.uri },
+              `memento has been checked, moving to write page "${task.pageTitle}" ...`,
+            );
+            this.eventEmitter.emit('source.checked', { source, task });
+            return;
+          }
+        } catch (error) {
+          const errorResponse = error as AxiosError;
+          log.error(errorResponse, 'error');
         }
       }
 
-      log.error({ url }, 'no match found in mementos for the source url');
+      log.error(
+        {
+          url,
+          query: source.title.toLowerCase(),
+          mementos: [mementos.map((memento) => memento.uri)],
+        },
+        'no match found in mementos for the source url',
+      );
+      this.eventEmitter.emit('source.unverifiable', { source, task });
     } catch (error) {
       log.error(error);
     }

@@ -14,12 +14,13 @@ export class SourcesService extends CoreProvider {
     super(rootLogger);
   }
 
-  create(template: Template): Source {
+  create(template: Template, content: string): Source {
     const source = new Source();
     source.url = this.citeTemplatesService.getUrlValue(template);
     source.title = template.getValue('title');
     source.templateName = String(template.name).toLowerCase();
     source.templateWikitext = template.wikitext;
+    source.dead = this.citeTemplatesService.isDead(template, content);
     return source;
   }
 }

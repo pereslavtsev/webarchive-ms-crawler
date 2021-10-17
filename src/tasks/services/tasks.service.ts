@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ApiPage, mwn } from 'mwn';
+import { ApiPage, ApiRevision, mwn } from 'mwn';
 import { InjectTasksRepository, Task, TaskStatus } from '@app/tasks';
 import { SourcesService } from './sources.service';
 import { InjectBot } from 'nest-mwn';
@@ -34,8 +34,6 @@ export class TasksService extends CoreProvider {
       templatePredicate: (template) => {
         const archived = this.citeTemplatesService.isArchived(template);
         const url = this.citeTemplatesService.getUrlValue(template);
-        const dead = this.citeTemplatesService.isDead(template, content);
-        console.log('dead', dead);
         return !archived && !!url; // unarchived sources with url
       },
     });
@@ -50,7 +48,7 @@ export class TasksService extends CoreProvider {
     }
 
     task.sources = templates.map((template) =>
-      this.sourcesService.create(template),
+      this.sourcesService.create(template, content),
     );
 
     return task;
@@ -59,6 +57,19 @@ export class TasksService extends CoreProvider {
   async create(...pages: ApiPage[]) {
     const tasks = pages.map((page) => this.createByPage(page));
     return this.tasksRepository.save(tasks);
+  }
+
+  async setDone(taskId: Task['id'], newRevId: ApiRevision['revid']) {
+    const task = await this.tasksRepository.findOneOrFail(taskId);
+    task.status = TaskStatus.DONE;
+    task.newRevisionId = newRevId;
+    return this.tasksRepository.save(task);
+  }
+
+  async setFailed(taskId: Task['id']) {
+    const task = await this.tasksRepository.findOneOrFail(taskId);
+    task.status = TaskStatus.FAILED;
+    return this.tasksRepository.save(task);
   }
 
   async setReady(taskId: Task['id']) {

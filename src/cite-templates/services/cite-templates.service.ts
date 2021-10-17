@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Template } from 'mwn';
+import { mwn, Template } from 'mwn';
 
 import { CiteTemplate } from '../interfaces';
 import { TEMPLATES } from '../mocks/cite-templates.mock';
 import { CoreProvider } from '@app/core';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
+import { InjectBot } from 'nest-mwn';
 
 @Injectable()
 export class CiteTemplatesService extends CoreProvider {
   private readonly data = TEMPLATES;
 
-  constructor(@RootLogger() rootLogger: Bunyan) {
+  constructor(@RootLogger() rootLogger: Bunyan, @InjectBot() private bot: mwn) {
     super(rootLogger);
   }
 
@@ -29,10 +30,19 @@ export class CiteTemplatesService extends CoreProvider {
       (param) => template.getValue(param) === 'yes',
     );
     const [, after] = content.split(template.wikitext);
-    const marked = after.match(
-      /^{{(недоступная ссылка|мёртвая ссылка|битая ссылка|deadlink|dead link)/i,
-    );
-    return dead ?? !!marked;
+    const wkt = new this.bot.wikitext(after);
+    const [firstTemplate] = wkt.parseTemplates({});
+    const marked =
+      !!firstTemplate &&
+      !!after.match(/^\s+?{{/m) &&
+      [
+        'недоступная ссылка',
+        'мёртвая ссылка',
+        'битая ссылка',
+        'deadlink',
+        'dead link',
+      ].includes(String(firstTemplate.name).toLowerCase());
+    return dead || marked;
   }
 
   getUrlValue(template: Template): string {

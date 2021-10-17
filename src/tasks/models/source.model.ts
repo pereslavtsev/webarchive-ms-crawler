@@ -10,7 +10,7 @@ export class Source extends BaseModel {
   url!: string;
 
   @Column({ type: 'boolean', default: false })
-  deadLink!: boolean;
+  dead!: boolean;
 
   @Column({ nullable: true })
   title!: string | null;

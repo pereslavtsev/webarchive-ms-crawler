@@ -14,6 +14,9 @@ export class Task extends BaseModel {
   @Column({ type: 'numeric', nullable: true })
   revisionId!: number;
 
+  @Column({ type: 'numeric', nullable: true })
+  newRevisionId!: number;
+
   @Column({
     enum: TaskStatus,
     enumName: 'task_status',

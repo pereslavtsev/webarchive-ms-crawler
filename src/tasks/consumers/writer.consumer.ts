@@ -65,11 +65,15 @@ export class WriterConsumer extends CoreProvider {
         const archiveDate = DateTime.fromISO(
           source.archiveDate as unknown as string,
         ).toISODate();
-        const { archiveUrlParam, archiveDateParam } =
+        const { archiveUrlParam, archiveDateParam, deadLinkParam } =
           this.citeTemplatesService.findByName(source.templateName);
         source.templateWikitext = source.templateWikitext.replace(
-          /}}/,
-          `|${archiveUrlParam}=${source.archiveUrl}|${archiveDateParam}=${archiveDate}}}`,
+          /}}$/,
+          `${
+            source.dead && deadLinkParam ? `|${deadLinkParam}=yes` : ''
+          }|${archiveUrlParam}=${
+            source.archiveUrl
+          }|${archiveDateParam}=${archiveDate}}}`,
         );
         currentContent = currentContent.replace(
           oldWikitext,
@@ -77,31 +81,22 @@ export class WriterConsumer extends CoreProvider {
         );
       });
 
-      //console.log('currentContent', currentContent);
+      const res = await this.bot.save(
+        task.pageTitle,
+        currentContent,
+        `Архивировано источников: ${checkedSources.length}`,
+        {
+          minor: true,
+        },
+      );
+      await this.taskService.setDone(task.id, res.newrevid);
 
       log.info(
+        res,
         `page "${task.pageTitle}" has been written, ${checkedSources.length} was archived`,
       );
-      // const res = await this.bot.save(
-      //   task.pageTitle,
-      //   currentContent,
-      //   `Архивировано источников: ${archivedSources.length}`,
-      //   {
-      //     minor: true,
-      //   },
-      // );
-      // console.log('res', res);
-      // if (res.result === 'Success') {
-      //   await this.taskService.update(task.id, {
-      //     status: TaskStatus.COMPLETED,
-      //   });
-      // } else {
-      //   console.log('error res', res);
-      // }
-      await job.queue.pause();
-      console.log('paused');
     } catch (error) {
-      console.log('error', error);
+      this.log.error(error);
     }
   }
 }

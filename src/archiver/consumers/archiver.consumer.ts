@@ -62,7 +62,13 @@ export class ArchiverConsumer extends CoreProvider {
         switch (errorResponse.response.status) {
           case StatusCodes.TOO_MANY_REQUESTS: {
             log.error('too many requests');
-            await job.queue.add(job.data);
+            await job.queue.pause();
+            await job.queue.add(job.data, {
+              lifo: true,
+              delay: 5000,
+              ...job.opts,
+            });
+            await job.queue.resume();
             break;
           }
           default: {
