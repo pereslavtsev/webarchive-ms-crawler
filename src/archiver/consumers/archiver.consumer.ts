@@ -1,4 +1,4 @@
-import { Process, Processor } from '@nestjs/bull';
+import { OnQueueDrained, Process, Processor } from '@nestjs/bull';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { ARCHIVER_QUEUE } from '../archiver.constants';
 import { ArchiverJob } from '../archiver.types';
@@ -10,6 +10,10 @@ import type { AxiosError } from 'axios';
 import { StatusCodes } from 'http-status-codes';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 @Processor(ARCHIVER_QUEUE)
 export class ArchiverConsumer extends CoreProvider {
   constructor(
@@ -18,6 +22,11 @@ export class ArchiverConsumer extends CoreProvider {
     private eventEmitter: EventEmitter2,
   ) {
     super(rootLogger);
+  }
+
+  @OnQueueDrained()
+  handleDrained() {
+    this.log.info(`"${ARCHIVER_QUEUE}" queue has been drained`);
   }
 
   @Process()
@@ -62,11 +71,19 @@ export class ArchiverConsumer extends CoreProvider {
         switch (errorResponse.response.status) {
           case StatusCodes.TOO_MANY_REQUESTS: {
             log.error('too many requests');
+            if (String(job.id).includes('repeated')) {
+              this.eventEmitter.emit('source.failed', {
+                source,
+                task,
+              });
+              return;
+            }
             await job.queue.pause();
+            await sleep(3000);
             await job.queue.add(job.data, {
               lifo: true,
               delay: 5000,
-              ...job.opts,
+              jobId: `${job.id}_repeated`,
             });
             await job.queue.resume();
             break;

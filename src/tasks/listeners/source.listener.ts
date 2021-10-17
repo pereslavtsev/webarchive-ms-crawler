@@ -63,6 +63,7 @@ export class SourceListener extends CoreProvider {
 
   @OnEvent('source.processed')
   async handleSourceProcessed({ task }) {
+    const log = this.log.child({ reqId: `task_${task.id}` });
     const unchecked = await this.sourcesRepository.count({
       where: {
         task,
@@ -75,7 +76,7 @@ export class SourceListener extends CoreProvider {
         ),
       },
     });
-    this.log.debug(
+    log.debug(
       `${unchecked}/${task.sources.length} unchecked sources for page "${task.pageTitle}"`,
     );
     if (!unchecked) {
@@ -86,7 +87,9 @@ export class SourceListener extends CoreProvider {
         },
       });
       if (!checked) {
-        this.log.error('no checked sources has been found, set as failed');
+        log.error(
+          `no checked sources for page "${task.pageTitle}" has been found, set as failed`,
+        );
         await this.tasksService.setFailed(task.id);
         return;
       }
@@ -94,7 +97,7 @@ export class SourceListener extends CoreProvider {
         const updatedTask = await this.tasksService.setReady(task.id);
         await this.writerQueue.add(updatedTask, { jobId: `task_${task.id}` });
       } catch (error) {
-        this.log.error(error, task);
+        log.error(error, task);
       }
     }
   }
@@ -114,6 +117,5 @@ export class SourceListener extends CoreProvider {
     source.archiveDate = checkedMemento.archivedDate;
     await this.sourcesRepository.save(source);
     this.eventEmitter.emit('source.processed', { task });
-    // console.log('unchecked', task.pageTitle, unchecked);
   }
 }

@@ -1,4 +1,4 @@
-import { Process, Processor } from '@nestjs/bull';
+import { OnQueueDrained, Process, Processor } from '@nestjs/bull';
 import { InjectBot } from 'nest-mwn';
 import { ApiRevision, mwn } from 'mwn';
 import type { Job } from 'bull';
@@ -21,6 +21,11 @@ export class WriterConsumer extends CoreProvider {
     @InjectBot() private readonly bot: mwn,
   ) {
     super(rootLogger);
+  }
+
+  @OnQueueDrained()
+  handleDrained() {
+    this.log.info(`"${WRITER_QUEUE}" queue has been drained`);
   }
 
   @Process()

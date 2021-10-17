@@ -60,13 +60,13 @@ export class AnalyzerConsumer extends CoreProvider {
         }
       }
 
-      log.error(
+      log.warn(
         {
           url,
           query: source.title.toLowerCase(),
-          mementos: [mementos.map((memento) => memento.uri)],
+          mementos: mementos.map((memento) => memento.uri),
         },
-        'no match found in mementos for the source url',
+        'all source momentos was analyzed, but no query match found for the source url',
       );
       this.eventEmitter.emit('source.unverifiable', { source, task });
     } catch (error) {

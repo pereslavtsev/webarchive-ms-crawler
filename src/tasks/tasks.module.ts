@@ -9,19 +9,25 @@ import { CiteTemplatesModule } from '@app/cite-templates';
 import { ArchiverModule } from '@app/archiver';
 import { AnalyzerModule } from '@app/analyzer';
 import { BullModule } from '@nestjs/bull';
+import { MatcherModule } from '@app/matcher';
+import { Queue } from 'bull';
 
-import { InjectTasksRepository, InjectWriterQueue } from './tasks.decorators';
+import {
+  InjectSourcesRepository,
+  InjectTasksRepository,
+  InjectWriterQueue,
+} from './tasks.decorators';
 import { WriterConsumer } from './consumers';
 import * as models from './models';
 import * as services from './services';
 import * as listeners from './listeners';
 import { WRITER_QUEUE } from './tasks.constants';
-import { Queue } from 'bull';
 
 @Module({
   imports: [
     AnalyzerModule,
     ArchiverModule,
+    MatcherModule,
     TypeOrmModule.forFeature([...Object.values(models)]),
     BullModule.registerQueue({
       name: WRITER_QUEUE,
@@ -39,12 +45,15 @@ export class TasksModule implements OnModuleInit, BeforeApplicationShutdown {
   constructor(
     @InjectTasksRepository()
     private tasksRepository: Repository<models.Task>,
+    @InjectSourcesRepository()
+    private sourcesRepository: Repository<models.Source>,
     @InjectWriterQueue()
     private writerQueue: Queue<models.Task>,
   ) {}
 
   async onModuleInit() {
-    await this.tasksRepository.delete({});
+    // await this.tasksRepository.delete({});
+    // await this.sourcesRepository.delete({});
     await this.writerQueue.pause();
     await this.writerQueue.empty();
     await this.writerQueue.clean(0, 'completed');

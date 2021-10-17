@@ -54,7 +54,7 @@ export class CrawlerService
       action: 'query',
       generator: 'categorymembers',
       //gtilimit: '10',
-      gcmtitle: 'Категория:Свободные системы управления сайтами',
+      gcmtitle: 'Категория:OpenOffice.org',
       gcmnamespace: 0,
       prop: 'revisions',
       rvslots: 'main',

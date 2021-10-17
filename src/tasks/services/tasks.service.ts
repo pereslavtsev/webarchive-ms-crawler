@@ -4,7 +4,7 @@ import { InjectTasksRepository, Task, TaskStatus } from '@app/tasks';
 import { SourcesService } from './sources.service';
 import { InjectBot } from 'nest-mwn';
 import { CiteTemplatesService } from '@app/cite-templates';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CoreProvider } from '@app/core';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
@@ -55,8 +55,18 @@ export class TasksService extends CoreProvider {
   }
 
   async create(...pages: ApiPage[]) {
-    const tasks = pages.map((page) => this.createByPage(page));
-    return this.tasksRepository.save(tasks);
+    const tasks = await this.tasksRepository.find({
+      pageId: In(pages.map((page) => page.pageid)),
+    });
+    const newTasks = pages
+      .filter(
+        (page) =>
+          !tasks
+            .map((task) => Number(task.pageId))
+            .includes(Number(page.pageid)),
+      )
+      .map((page) => this.createByPage(page));
+    return this.tasksRepository.save(newTasks);
   }
 
   async setDone(taskId: Task['id'], newRevId: ApiRevision['revid']) {
