@@ -31,6 +31,42 @@ export class MatcherService extends CoreProvider {
         })),
     );
   }
+  
+  protected async processPage(page: ApiPage) {
+    const { revisions } = page;
+    for (const revision of revisions) {
+      const {
+        slots: {
+          // @ts-ignore
+          main: { content, texthidden },
+        },
+      } = revision;
+      if (texthidden) {
+        continue;
+      }
+
+      const matchedSources = [];
+
+      for (const source of sources) {
+        // if url has been founded in revision content
+        if (content.includes(source.url) && !source.revisionId) {
+          source.status = SourceStatus.MATCHED;
+          source.revisionId = revision.revid;
+          source.revisionDate = new this.bot.date(revision.timestamp);
+
+          // and push in matched source array for the event emitter
+          matchedSources.push(source);
+        }
+      }
+
+      if (matchedSources.length) {
+        this.eventEmitter.emit('source.matched', {
+          task,
+          sources: matchedSources,
+        });
+      }
+    }
+  }
 
   async matchSources(task: Task) {
     const { sources, pageId, revisionId } = task;
@@ -45,39 +81,8 @@ export class MatcherService extends CoreProvider {
       rvlimit: 'max',
       rvprop: ['ids', 'content', 'timestamp'],
     })) {
-      const [{ revisions }] = query.pages as ApiPage[];
-      for (const revision of revisions) {
-        const {
-          slots: {
-            // @ts-ignore
-            main: { content, texthidden },
-          },
-        } = revision;
-        if (texthidden) {
-          continue;
-        }
-
-        const matchedSources = [];
-
-        for (const source of sources) {
-          // if url has been founded in revision content
-          if (content.includes(source.url) && !source.revisionId) {
-            source.status = SourceStatus.MATCHED;
-            source.revisionId = revision.revid;
-            source.revisionDate = new this.bot.date(revision.timestamp);
-
-            // and push in matched source array for the event emitter
-            matchedSources.push(source);
-          }
-        }
-
-        if (matchedSources.length) {
-          this.eventEmitter.emit('source.matched', {
-            task,
-            sources: matchedSources,
-          });
-        }
-      }
+      const [pages] = query.pages as ApiPage[];
+      this.processPage(pages);
     }
   }
 }
