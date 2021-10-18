@@ -28,6 +28,37 @@ export class ArchiverConsumer extends CoreProvider {
   handleDrained() {
     this.log.info(`"${ARCHIVER_QUEUE}" queue has been drained`);
   }
+  
+  protected async handleRequestError(job: ArchiverJob, error: AxiosError) {
+    switch (error.response.status) {
+      case StatusCodes.TOO_MANY_REQUESTS: {
+        log.error('too many requests');
+        if (String(job.id).includes('repeated')) {
+          this.eventEmitter.emit('source.failed', {
+            source,
+            task,
+          });
+          return;
+        }
+        await job.queue.pause();
+        await sleep(3000);
+        await job.queue.add(job.data, {
+          lifo: true,
+          delay: 5000,
+          jobId: `${job.id}_repeated`,
+        });
+        await job.queue.resume();
+        break;
+      }
+      default: {
+        log.error(error);
+        this.eventEmitter.emit('source.failed', {
+          source,
+          task,
+        });
+      }
+    }
+  }
 
   @Process()
   async archive(job: ArchiverJob) {
@@ -67,35 +98,7 @@ export class ArchiverConsumer extends CoreProvider {
           task,
         } as SourceArchivedEvent);
       } catch (error) {
-        const errorResponse = error as AxiosError;
-        switch (errorResponse.response.status) {
-          case StatusCodes.TOO_MANY_REQUESTS: {
-            log.error('too many requests');
-            if (String(job.id).includes('repeated')) {
-              this.eventEmitter.emit('source.failed', {
-                source,
-                task,
-              });
-              return;
-            }
-            await job.queue.pause();
-            await sleep(3000);
-            await job.queue.add(job.data, {
-              lifo: true,
-              delay: 5000,
-              jobId: `${job.id}_repeated`,
-            });
-            await job.queue.resume();
-            break;
-          }
-          default: {
-            log.error(error);
-            this.eventEmitter.emit('source.failed', {
-              source,
-              task,
-            });
-          }
-        }
+        this.handleRequestError(job, error);
       }
     } catch (error) {
       log.error(error);
