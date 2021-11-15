@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MwnModuleOptions, MwnModuleOptionsFactory } from 'nest-mwn';
 import { mwn as mwnConfig } from '../config';
 import { ConfigType } from '@nestjs/config';
-import { CoreProvider } from '../core.provider';
+import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
 export class MwnConfigService
-  extends CoreProvider
+  extends LoggableProvider
   implements MwnModuleOptionsFactory
 {
   constructor(

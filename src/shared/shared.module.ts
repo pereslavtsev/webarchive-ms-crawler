@@ -38,7 +38,7 @@ import { LOGGER } from './logger';
   providers: [Logger],
   exports: [BullModule, MwnModule, Logger],
 })
-export class CoreModule implements OnModuleInit {
+export class SharedModule implements OnModuleInit {
   constructor(
     @InjectBot()
     private readonly bot: mwn,

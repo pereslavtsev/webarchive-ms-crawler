@@ -3,12 +3,12 @@ import { SharedBullConfigurationFactory } from '@nestjs/bull';
 import * as Bull from 'bull';
 import { ConfigType } from '@nestjs/config';
 import bullConfig from '../config/bull.config';
-import { CoreProvider } from '../core.provider';
+import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 
 @Injectable()
 export class BullConfigService
-  extends CoreProvider
+  extends LoggableProvider
   implements SharedBullConfigurationFactory
 {
   constructor(
