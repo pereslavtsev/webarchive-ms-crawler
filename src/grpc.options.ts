@@ -1,11 +1,13 @@
 import { Transport, ClientOptions } from '@nestjs/microservices';
-import { join } from 'path';
+import { core } from '@webarchiver/protoc';
+
+const port = process.env.PORT || 50051;
 
 export const grpcClientOptions: ClientOptions = {
   transport: Transport.GRPC,
   options: {
-    url: 'localhost:9090',
-    package: 'hello',
-    protoPath: join(__dirname, './crawler.proto'),
+    url: `0.0.0.0:${port}`,
+    package: core.protobufPackage,
+    protoPath: core.getProtoPath(),
   },
 };
