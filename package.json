@@ -1,10 +1,21 @@
 {
-  "name": "webarchiver-ms-core",
+  "name": "@webarchiver/core",
   "version": "0.0.1",
   "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "author": {
+    "name": "Vitaly Pereslavtsev",
+    "email": "dev@pereslavtsev.com",
+    "url": "https://www.pereslavtsev.com/"
+  },
+  "homepage": "https://github.com/pereslavtsev/webarchiver-core#readme",
+  "bugs": {
+    "url": "https://github.com/pereslavtsev/webarchiver-core/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pereslavtsev/webarchiver-core.git"
+  },
+  "license": "ISC",
   "scripts": {
     "generate": "",
     "prebuild": "rimraf dist",
