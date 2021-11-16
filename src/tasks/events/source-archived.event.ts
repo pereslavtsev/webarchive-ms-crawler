@@ -1,6 +1,6 @@
-import { Source, Task } from '@app/tasks';
-
-export class SourceArchivedEvent {
-  task: Task;
-  source: Source;
-}
+// import { Source, Task } from '@app/tasks';
+//
+// export class SourceArchivedEvent {
+//   task: Task;
+//   source: Source;
+// }

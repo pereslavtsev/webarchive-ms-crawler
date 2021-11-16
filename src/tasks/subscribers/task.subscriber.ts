@@ -2,7 +2,6 @@ import {
   Connection,
   EntitySubscriberInterface,
   EventSubscriber,
-  InsertEvent,
 } from 'typeorm';
 import { Task } from '../models';
 
@@ -14,9 +13,5 @@ export class TaskSubscriber implements EntitySubscriberInterface<Task> {
 
   listenTo() {
     return Task;
-  }
-
-  afterInsert(event: InsertEvent<Task>) {
-    console.log(`BEFORE USER INSERTED: `, event.entity);
   }
 }

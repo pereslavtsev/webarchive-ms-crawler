@@ -1,10 +1,21 @@
-import { Column, Entity, OneToMany } from 'typeorm';
-import { TaskStatus } from '../enums';
-import { Source } from './source.model';
-import { BaseModel } from './base.model';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Source } from '@core/sources';
+import { core } from '@webarchiver/protoc';
 
 @Entity('tasks')
-export class Task extends BaseModel {
+export class Task {
+  static Status = core.v1.Task_Status;
+
+  @PrimaryGeneratedColumn('uuid')
+  readonly id: string;
+
   @Column()
   pageTitle!: string;
 
@@ -18,15 +29,20 @@ export class Task extends BaseModel {
   newRevisionId!: number;
 
   @Column({
-    enum: TaskStatus,
+    enum: Task.Status,
     enumName: 'task_status',
-    default: TaskStatus.PENDING,
+    default: Task.Status.PENDING,
   })
-  status!: TaskStatus;
+  status!: core.v1.Task_Status;
+
+  @CreateDateColumn()
+  readonly createdAt: Date;
+
+  @UpdateDateColumn()
+  readonly updatedAt: Date;
 
   @OneToMany(() => Source, (source) => source.task, {
     cascade: true,
-    eager: true,
   })
   sources: Source[];
 }

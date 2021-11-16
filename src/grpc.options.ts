@@ -7,7 +7,7 @@ export const grpcClientOptions: ClientOptions = {
   transport: Transport.GRPC,
   options: {
     url: `0.0.0.0:${port}`,
-    package: core.protobufPackage,
+    package: core.v1.protobufPackage,
     protoPath: core.getProtoPath(),
   },
 };

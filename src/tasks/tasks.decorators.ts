@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Source, Task, Memento } from './models';
+import { Source, Task } from './models';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { WRITER_QUEUE } from './tasks.constants';
@@ -11,10 +11,6 @@ export function InjectTasksRepository() {
 
 export function InjectSourcesRepository() {
   return InjectRepository(Source);
-}
-
-export function InjectMementosRepository() {
-  return InjectRepository(Memento);
 }
 
 // Events

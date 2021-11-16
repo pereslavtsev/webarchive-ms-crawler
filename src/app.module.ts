@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
-import { CoreModule } from '@app/core';
-import { CrawlerModule } from '@app/crawler';
-import { TasksModule } from '@app/tasks';
-import { CiteTemplatesModule } from '@app/cite-templates';
+import { SharedModule } from '@core/shared';
+// import { TasksModule } from '@core/tasks';
+import { TemplatesModule } from '@core/templates';
+import { WriterModule } from '@core/writer';
+import { SourcesModule } from '@core/sources';
 
 @Module({
-  imports: [CoreModule, CrawlerModule, TasksModule, CiteTemplatesModule],
-  //controllers: [AppController, HelloService],
-  //providers: [AppService],
+  imports: [
+    SharedModule,
+    // TasksModule,
+    TemplatesModule,
+    WriterModule,
+    SourcesModule,
+  ],
 })
 export class AppModule {}
