@@ -1,5 +1,5 @@
-// import type { Job, Queue } from 'bull';
-// import type { Source, Task } from '@app/tasks';
-//
-// export type AnalyzerJob = Job<{ source: Source; task: Task }>;
-// export type AnalyzerQueue = Queue<{ source: Source; task: Task }>;
+import type { Job, Queue } from 'bull';
+import type { Task } from '@core/tasks';
+
+export type AnalyzerJob = Job<{ task: Task }>;
+export type AnalyzerQueue = Queue<{ task: Task }>;

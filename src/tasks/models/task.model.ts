@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Source } from '@core/sources';
 import { core } from '@webarchiver/protoc';
+import type { ApiPage, ApiRevision } from 'mwn';
 
 @Entity('tasks')
 export class Task {
@@ -16,24 +17,18 @@ export class Task {
   @PrimaryGeneratedColumn('uuid')
   readonly id: string;
 
-  @Column()
-  pageTitle!: string;
+  @Column({ type: 'numeric' })
+  readonly pageId!: ApiPage['pageid'];
 
   @Column({ type: 'numeric', nullable: true })
-  pageId!: number;
-
-  @Column({ type: 'numeric', nullable: true })
-  revisionId!: number;
-
-  @Column({ type: 'numeric', nullable: true })
-  newRevisionId!: number;
+  revisionId!: ApiRevision['revid'];
 
   @Column({
     enum: Task.Status,
     enumName: 'task_status',
     default: Task.Status.PENDING,
   })
-  status!: core.v1.Task_Status;
+  readonly status!: core.v1.Task_Status;
 
   @CreateDateColumn()
   readonly createdAt: Date;
@@ -44,5 +39,5 @@ export class Task {
   @OneToMany(() => Source, (source) => source.task, {
     cascade: true,
   })
-  sources: Source[];
+  readonly sources: Source[];
 }

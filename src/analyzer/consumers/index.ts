@@ -1,1 +1,1 @@
-// export * from './analyzer.consumer';
+export * from './analyzer.consumer';

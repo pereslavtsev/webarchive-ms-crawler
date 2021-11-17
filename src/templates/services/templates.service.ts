@@ -13,7 +13,10 @@ function extractName(fullTitle: string) {
 }
 
 type ListAliases = Template['aliases'][];
-type CreateSettings = Pick<Settings, 'defaultUrlParam' | 'archiveUrlParam'> &
+type CreateSettings = Pick<
+  Settings,
+  'defaultUrlParam' | 'archiveUrlParam' | 'titleParam'
+> &
   Partial<
     Pick<
       Settings,
@@ -21,6 +24,7 @@ type CreateSettings = Pick<Settings, 'defaultUrlParam' | 'archiveUrlParam'> &
       | 'deadParamAliases'
       | 'urlParamAliases'
       | 'deadUrlParam'
+      | 'titleParamAliases'
     >
   >;
 
@@ -40,6 +44,8 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
   async onModuleInit() {
     await this.templatesRepository.delete({});
     const template = await this.create('cite web', {
+      titleParam: 'title',
+      titleParamAliases: ['заголовок'],
       defaultUrlParam: 'url',
       urlParamAliases: ['url', 'ссылка'],
       archiveUrlParam: 'archive-url',
@@ -47,7 +53,7 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
       deadUrlParam: 'deadlink',
       deadParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
     });
-    console.log('template', template);
+    //console.log('template', template);
   }
 
   async create(name: string, settings: CreateSettings) {

@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -10,6 +11,7 @@ import {
 import { IsUUID } from 'class-validator';
 import type { ApiPage } from 'mwn';
 import { TemplateSettings } from './template-settings.model';
+import { Source } from '@core/sources';
 
 @Entity('templates')
 export class Template {
@@ -28,9 +30,13 @@ export class Template {
 
   @OneToOne(() => TemplateSettings, (settings) => settings.template, {
     cascade: true,
+    eager: true,
   })
   @JoinColumn()
-  settings: TemplateSettings;
+  readonly settings: TemplateSettings;
+
+  @OneToMany(() => Source, (source) => source.template)
+  readonly sources: Source[];
 
   @CreateDateColumn()
   readonly createdAt: Date;

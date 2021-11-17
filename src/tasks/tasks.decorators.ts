@@ -1,16 +1,18 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Source, Task } from './models';
+import { Task } from './models';
 import { OnEvent } from '@nestjs/event-emitter';
-import { InjectQueue } from '@nestjs/bull';
-import { WRITER_QUEUE } from './tasks.constants';
 
-// Repositories
 export function InjectTasksRepository() {
   return InjectRepository(Task);
 }
 
-export function InjectSourcesRepository() {
-  return InjectRepository(Source);
+export class OnTask {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  protected constructor() {}
+
+  static Created() {
+    return OnEvent('task.created');
+  }
 }
 
 // Events
@@ -28,9 +30,4 @@ export function OnSourceFailed() {
 
 export function OnSourceMatched() {
   return OnEvent('source.matched');
-}
-
-// Queues
-export function InjectWriterQueue() {
-  return InjectQueue(WRITER_QUEUE);
 }

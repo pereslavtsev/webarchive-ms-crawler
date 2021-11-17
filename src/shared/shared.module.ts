@@ -19,7 +19,9 @@ import { LOGGER } from './logger';
 @Global()
 @Module({
   imports: [
-    LoggingModule.forRoot(LOGGER, {}),
+    LoggingModule.forRoot(LOGGER, {
+      skipRequestInterceptor: true,
+    }),
     ConfigModule.forRoot({
       load: [...Object.values(config)],
       isGlobal: true,

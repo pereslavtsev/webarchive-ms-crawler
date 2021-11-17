@@ -16,6 +16,12 @@ export class TemplateSettings {
   readonly id: string;
 
   @Column()
+  readonly titleParam: string;
+
+  @Column({ type: 'varchar', array: true, nullable: true })
+  readonly titleParamAliases: string[] | null;
+
+  @Column()
   readonly defaultUrlParam: string;
 
   @Column({ type: 'varchar', array: true, nullable: true })
