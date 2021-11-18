@@ -26,7 +26,7 @@ import { LOGGER } from './logger';
       load: [...Object.values(config)],
       isGlobal: true,
     }),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({ wildcard: true }),
     MwnModule.forRootAsync({
       useClass: MwnConfigService,
     }),

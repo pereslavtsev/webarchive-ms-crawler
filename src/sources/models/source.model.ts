@@ -10,6 +10,7 @@ import {
 import { Task } from '@core/tasks';
 import { Template } from '@core/templates';
 import { core } from '@webarchiver/protoc';
+import { TransformDate } from '@core/shared';
 
 const { Source_Status } = core.v1;
 
@@ -33,9 +34,11 @@ export class Source {
   readonly archiveUrl: string | null;
 
   @Column({ nullable: true })
+  @TransformDate()
   readonly archiveDate: Date | null;
 
   @Column({ nullable: true })
+  @TransformDate()
   readonly revisionDate: Date | null;
 
   @Column({ nullable: true })
@@ -49,15 +52,20 @@ export class Source {
   readonly status!: core.v1.Source_Status;
 
   @CreateDateColumn()
+  @TransformDate()
   readonly createdAt: Date;
 
   @UpdateDateColumn()
+  @TransformDate()
   readonly updatedAt: Date;
+
+  @Column('uuid')
+  readonly taskId: Task['id'];
 
   @ManyToOne(() => Task, (task) => task.sources, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn()
+  @JoinColumn({ name: 'task_id' })
   readonly task: Task;
 
   @ManyToOne(() => Template, (template) => template.sources, {

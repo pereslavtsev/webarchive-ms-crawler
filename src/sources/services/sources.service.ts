@@ -5,6 +5,8 @@ import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { InjectSourcesRepository } from '../sources.decorators';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { Task } from '@core/tasks';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class SourcesService extends LoggableProvider {
@@ -17,8 +19,20 @@ export class SourcesService extends LoggableProvider {
     super(rootLogger);
   }
 
-  findById(sourceId: Source['id']): Promise<Source> {
-    return this.sourcesRepository.findOneOrFail(sourceId);
+  async findById(sourceId: Source['id']): Promise<Source> {
+    const source = await this.sourcesRepository.findOneOrFail(sourceId);
+    return plainToClass(Source, source);
+  }
+
+  async findByTaskId(taskId: Task['id']): Promise<Source[]> {
+    const sources = await this.sourcesRepository.find({
+      where: {
+        task: {
+          id: taskId,
+        },
+      },
+    });
+    return plainToClass(Source, sources);
   }
 
   async updateById(
@@ -26,7 +40,11 @@ export class SourcesService extends LoggableProvider {
     data: Partial<Source>,
   ): Promise<Source> {
     const source = await this.findById(sourceId);
-    return this.sourcesRepository.save({ ...source, ...data });
+    const updatedSource = await this.sourcesRepository.save({
+      ...source,
+      ...data,
+    });
+    return plainToClass(Source, updatedSource);
   }
 
   protected async setStatus(
@@ -34,12 +52,16 @@ export class SourcesService extends LoggableProvider {
     status: Source['status'],
   ): Promise<Source> {
     const source = await this.findById(sourceId);
-    return this.sourcesRepository.save({ ...source, status });
+    const updatedSource = await this.sourcesRepository.save({
+      ...source,
+      status,
+    });
+    return plainToClass(Source, updatedSource);
   }
 
   async setMatched(sourceId: Source['id']): Promise<Source> {
     const source = await this.setStatus(sourceId, Source.Status.MATCHED);
-    this.eventEmitter.emit('source.matched');
+    this.eventEmitter.emit('source.matched', source);
     return source;
   }
 

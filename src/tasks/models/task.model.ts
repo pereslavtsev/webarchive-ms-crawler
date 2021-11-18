@@ -12,9 +12,11 @@ import type { ApiPage, ApiRevision } from 'mwn';
 import { IsInt } from 'class-validator';
 import { TransformDate } from '@core/shared';
 
+const { Task_Status } = core.v1;
+
 @Entity({ name: 'tasks' })
 export class Task {
-  static Status = core.v1.Task_Status;
+  static Status = Task_Status;
 
   @PrimaryGeneratedColumn('uuid')
   readonly id: string;
@@ -24,7 +26,7 @@ export class Task {
   readonly pageId!: ApiPage['pageid'];
 
   @Column({ type: 'numeric', nullable: true })
-  revisionId!: ApiRevision['revid'];
+  readonly revisionId!: ApiRevision['revid'];
 
   @Column({
     enum: Task.Status,

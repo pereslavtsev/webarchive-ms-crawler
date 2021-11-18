@@ -48,7 +48,9 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
       revisionId,
       sources,
     });
-    updatedTask.sources.forEach(() => this.eventEmitter.emit('source.created'));
+    updatedTask.sources.forEach((source) =>
+      this.eventEmitter.emit('source.created', source),
+    );
     return updatedTask;
   }
 
@@ -57,7 +59,8 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
     status: Task['status'],
   ): Promise<Task> {
     const task = await this.findById(taskId);
-    return this.tasksRepository.save({ ...task, status });
+    const updatedTask = this.tasksRepository.save({ ...task, status });
+    return plainToClass(Task, updatedTask);
   }
 
   async setFailed(taskId: Task['id']): Promise<Task> {
@@ -90,8 +93,9 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
     return task;
   }
 
-  async findById(taskId: Task['id']) {
-    return this.tasksRepository.findOneOrFail(taskId);
+  async findById(taskId: Task['id']): Promise<Task> {
+    const task = await this.tasksRepository.findOneOrFail(taskId);
+    return plainToClass(Task, task);
   }
 
   findAll({ pageSize, pageToken }: ListTasksDto) {
