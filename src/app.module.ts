@@ -5,10 +5,12 @@ import { TemplatesModule } from '@core/templates';
 import { WriterModule } from '@core/writer';
 import { SourcesModule } from '@core/sources';
 import { AnalyzerModule } from '@core/analyzer';
+import { MatcherModule } from '@core/matcher';
 
 @Module({
   imports: [
     AnalyzerModule,
+    MatcherModule,
     SharedModule,
     TasksModule,
     TemplatesModule,

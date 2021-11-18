@@ -1,88 +1,125 @@
 import { Injectable } from '@nestjs/common';
 import { ApiPage, mwn } from 'mwn';
 import { InjectBot } from 'nest-mwn';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
-import { MatcherQueue } from '../matcher.types';
-import { InjectMatcherQueue } from '../matcher.decorators';
 import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
+import { Task } from '@core/tasks';
+import { isMainThread, parentPort, Worker } from 'worker_threads';
+import { Source, SourcesService } from '@core/sources';
+import { processorPath } from '@core/matcher/matcher.constants';
+import { InjectMatcherQueue } from '../matcher.decorators';
+import type { MatcherQueue } from '../matcher.types';
 
 @Injectable()
 export class MatcherService extends LoggableProvider {
   constructor(
     @RootLogger() rootLogger: Bunyan,
-    // @InjectBot()
-    // private bot: mwn,
-    // private eventEmitter: EventEmitter2,
-    // @InjectMatcherQueue()
-    // private matcherQueue: MatcherQueue,
+    @InjectBot()
+    private bot: mwn,
+    @InjectMatcherQueue()
+    private matcherQueue: MatcherQueue,
+    private sourcesService: SourcesService,
   ) {
     super(rootLogger);
   }
 
-  // async submit(...tasks: Task[]) {
-  //   await this.matcherQueue.addBulk(
-  //     tasks
-  //       .filter((task) => task.status !== TaskStatus.SKIPPED)
-  //       .map((task) => ({
-  //         data: { task },
-  //         opts: { jobId: `task_${task.id}` },
-  //       })),
-  //   );
-  // }
-  //
-  // protected async processPage(page: ApiPage, task: Task) {
-  //   const { revisions } = page;
-  //   const { sources } = task;
-  //   for (const revision of revisions) {
-  //     const {
-  //       slots: {
-  //         // @ts-ignore
-  //         main: { content, texthidden },
-  //       },
-  //     } = revision;
-  //     if (texthidden) {
-  //       continue;
-  //     }
-  //
-  //     const matchedSources = [];
-  //
-  //     for (const source of sources) {
-  //       // if url has been founded in revision content
-  //       if (content.includes(source.url) && !source.revisionId) {
-  //         source.status = SourceStatus.MATCHED;
-  //         source.revisionId = revision.revid;
-  //         source.revisionDate = new this.bot.date(revision.timestamp);
-  //
-  //         // and push in matched source array for the event emitter
-  //         matchedSources.push(source);
-  //       }
-  //     }
-  //
-  //     if (matchedSources.length) {
-  //       this.eventEmitter.emit('source.matched', {
-  //         task,
-  //         sources: matchedSources,
-  //       });
-  //     }
-  //   }
-  // }
-  //
-  // async matchSources(task: Task) {
-  //   const { pageId, revisionId } = task;
-  //   // iterate over the page revisions
-  //   for await (const { query } of this.bot.continuedQueryGen({
-  //     action: 'query',
-  //     prop: 'revisions',
-  //     pageids: pageId,
-  //     rvdir: 'newer',
-  //     rvendid: revisionId,
-  //     rvslots: 'main',
-  //     rvlimit: 'max',
-  //     rvprop: ['ids', 'content', 'timestamp'],
-  //   })) {
-  //     const [pages] = query.pages as ApiPage[];
-  //     await this.processPage(pages, task);
-  //   }
-  // }
+  async match(task: Task): Promise<void> {
+    if (isMainThread) {
+      const worker = new Worker(processorPath, {
+        workerData: { task },
+        execArgv: [...process.execArgv, '--unhandled-rejections=strict'],
+      });
+
+      let matched = 0;
+
+      return new Promise((resolve, reject) => {
+        worker
+          .on('message', async (message) => {
+            switch (message.cmd) {
+              case 'matched': {
+                const { revision } = message.data;
+                await Promise.all([
+                  this.sourcesService.setMatched(message.sourceId),
+                  this.sourcesService.updateById(message.sourceId, {
+                    revisionId: revision.revid,
+                    revisionDate: new this.bot.date(revision.timestamp),
+                  }),
+                ]);
+                matched++;
+                const unmatchedPercents = (
+                  (matched / task.sources.length) *
+                  100
+                ).toFixed(0);
+                const job = await this.matcherQueue.getJob(task.id);
+                await job.progress(Number(unmatchedPercents));
+                return;
+              }
+            }
+          })
+          .on('error', (err) => {
+            reject(err);
+          })
+          .on('exit', () => {
+            resolve();
+          });
+      });
+    } else {
+      const { pageId, revisionId, sources } = task;
+
+      const sourcesMap = new Map<Source['url'], Source>();
+
+      sources.forEach((source) => sourcesMap.set(source.url, source));
+
+      for await (const { query } of this.bot.continuedQueryGen({
+        action: 'query',
+        prop: 'revisions',
+        pageids: pageId,
+        rvdir: 'newer',
+        rvendid: revisionId,
+        rvslots: 'main',
+        rvlimit: 'max',
+        rvprop: ['ids', 'content', 'timestamp'],
+      })) {
+        const [page] = query.pages as ApiPage[];
+        const { revisions } = page;
+
+        for (const revision of revisions) {
+          const {
+            slots: {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              main: { content, texthidden },
+            },
+          } = revision;
+          if (texthidden) {
+            continue;
+          }
+
+          for (const source of sourcesMap.values()) {
+            if (content.includes(source.url)) {
+              //console.log(source.url, revision.timestamp);
+
+              sourcesMap.delete(source.url);
+
+              parentPort.postMessage({
+                cmd: 'matched',
+                sourceId: source.id,
+                data: { revision },
+              });
+
+              if (!sourcesMap.size) {
+                return;
+              }
+            }
+          }
+        }
+
+        // parentPort.postMessage({
+        //   cmd: 'data',
+        //   watcherId: id,
+        //   data: json,
+        // });
+      }
+    }
+  }
 }

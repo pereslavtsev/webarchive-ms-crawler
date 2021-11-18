@@ -1,8 +1,0 @@
-export enum SourceStatus {
-  PENDING = 'PENDING',
-  MATCHED = 'MATCHED',
-  ARCHIVED = 'ARCHIVED',
-  FAILED = 'FAILED',
-  UNVERIFIABLE = 'UNVERIFIABLE',
-  CHECKED = 'CHECKED',
-}

@@ -3,6 +3,7 @@ import { core } from '@webarchiver/protoc';
 import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { TasksService } from '../services';
+import { CreateTaskDto, CancelTaskDto, GetTaskDto, ListTasksDto } from '../dto';
 
 const { TasksServiceControllerMethods } = core.v1;
 
@@ -20,24 +21,34 @@ export class TasksController
   }
 
   @UsePipes(new ValidationPipe())
-  listTasks(
-    request: core.v1.ListTasksRequest,
-  ): Promise<core.v1.ListTasksResponse> {
-    return {} as any;
+  async listTasks({
+    pageSize,
+    pageToken,
+    orderBy,
+  }: ListTasksDto): Promise<core.v1.ListTasksResponse> {
+    const { data, cursor } = await this.tasksService.findAll({
+      pageSize,
+      pageToken,
+      orderBy,
+    });
+    return {
+      data,
+      nextPageToken: cursor.afterCursor,
+    };
   }
 
   @UsePipes(new ValidationPipe())
-  createTask({ pageId }: core.v1.CreateTaskRequest): Promise<core.v1.Task> {
+  async createTask({ pageId }: CreateTaskDto): Promise<core.v1.Task> {
     return this.tasksService.create(pageId);
   }
 
   @UsePipes(new ValidationPipe())
-  getTask(request: core.v1.GetTaskRequest): Promise<core.v1.Task> {
-    return {} as any;
+  getTask({ id }: GetTaskDto): Promise<core.v1.Task> {
+    return this.tasksService.findById(id);
   }
 
   @UsePipes(new ValidationPipe())
-  cancelTask(request: core.v1.CancelTaskRequest): Promise<core.v1.Task> {
-    return {} as any;
+  cancelTask({ id }: CancelTaskDto): Promise<core.v1.Task> {
+    return this.tasksService.setCancelled(id);
   }
 }

@@ -6,6 +6,7 @@ import { InjectBot } from 'nest-mwn';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Template, TemplateSettings as Settings } from '../models';
 import { Repository } from 'typeorm';
+import { isMainThread } from 'worker_threads';
 
 function extractName(fullTitle: string) {
   const [, title] = fullTitle.split(':', 2);
@@ -42,18 +43,20 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.templatesRepository.delete({});
-    const template = await this.create('cite web', {
-      titleParam: 'title',
-      titleParamAliases: ['заголовок'],
-      defaultUrlParam: 'url',
-      urlParamAliases: ['url', 'ссылка'],
-      archiveUrlParam: 'archive-url',
-      archiveParamAliases: ['archive-url', 'archiveurl'],
-      deadUrlParam: 'deadlink',
-      deadParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
-    });
-    //console.log('template', template);
+    if (isMainThread) {
+      await this.templatesRepository.delete({});
+      const template = await this.create('cite web', {
+        titleParam: 'title',
+        titleParamAliases: ['заголовок'],
+        defaultUrlParam: 'url',
+        urlParamAliases: ['url', 'ссылка'],
+        archiveUrlParam: 'archive-url',
+        archiveParamAliases: ['archive-url', 'archiveurl'],
+        deadUrlParam: 'deadlink',
+        deadParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
+      });
+      //console.log('template', template);
+    }
   }
 
   async create(name: string, settings: CreateSettings) {

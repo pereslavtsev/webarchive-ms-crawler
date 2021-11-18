@@ -9,8 +9,10 @@ import {
 import { Source } from '@core/sources';
 import { core } from '@webarchiver/protoc';
 import type { ApiPage, ApiRevision } from 'mwn';
+import { IsInt } from 'class-validator';
+import { TransformDate } from '@core/shared';
 
-@Entity('tasks')
+@Entity({ name: 'tasks' })
 export class Task {
   static Status = core.v1.Task_Status;
 
@@ -18,6 +20,7 @@ export class Task {
   readonly id: string;
 
   @Column({ type: 'numeric' })
+  @IsInt()
   readonly pageId!: ApiPage['pageid'];
 
   @Column({ type: 'numeric', nullable: true })
@@ -31,13 +34,16 @@ export class Task {
   readonly status!: core.v1.Task_Status;
 
   @CreateDateColumn()
+  @TransformDate()
   readonly createdAt: Date;
 
   @UpdateDateColumn()
+  @TransformDate()
   readonly updatedAt: Date;
 
   @OneToMany(() => Source, (source) => source.task, {
     cascade: true,
+    eager: true,
   })
   readonly sources: Source[];
 }

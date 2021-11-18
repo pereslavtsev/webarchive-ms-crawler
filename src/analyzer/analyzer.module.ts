@@ -5,6 +5,7 @@ import { AnalyzerConsumer } from './consumers';
 import { AnalyzerService } from './services';
 import { TemplatesModule } from '@core/templates';
 import { TasksModule } from '@core/tasks';
+import { AnalyzerListener } from './listeners';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { TasksModule } from '@core/tasks';
     TemplatesModule,
     TasksModule,
   ],
-  providers: [AnalyzerConsumer, AnalyzerService],
+  providers: [AnalyzerConsumer, AnalyzerListener, AnalyzerService],
   exports: [AnalyzerService],
 })
 export class AnalyzerModule {}

@@ -18,6 +18,10 @@ export class OnTask {
     return this.createDecorator('created');
   }
 
+  static Skipped() {
+    return this.createDecorator('skipped');
+  }
+
   static Accepted() {
     return this.createDecorator('accepted');
   }

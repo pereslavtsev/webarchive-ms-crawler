@@ -43,6 +43,7 @@
     "@nestjs/config": "^1.0.2",
     "@nestjs/core": "^8.0.0",
     "@nestjs/event-emitter": "^1.0.0",
+    "@nestjs/mapped-types": "^1.0.0",
     "@nestjs/microservices": "^8.0.11",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/typeorm": "^8.0.2",
@@ -60,6 +61,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "typeorm": "^0.2.38",
+    "typeorm-cursor-pagination": "^0.6.1",
     "typeorm-naming-strategies": "^2.0.0",
     "url-parse": "^1.5.3"
   },

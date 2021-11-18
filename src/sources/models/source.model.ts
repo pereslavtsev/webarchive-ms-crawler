@@ -9,10 +9,14 @@ import {
 } from 'typeorm';
 import { Task } from '@core/tasks';
 import { Template } from '@core/templates';
-// import { SourceStatus } from '../enums';
+import { core } from '@webarchiver/protoc';
+
+const { Source_Status } = core.v1;
 
 @Entity('sources')
 export class Source {
+  static Status = Source_Status;
+
   @PrimaryGeneratedColumn('uuid')
   readonly id: string;
 
@@ -26,23 +30,23 @@ export class Source {
   readonly wikitext: string;
 
   @Column({ nullable: true })
-  archiveUrl: string | null;
+  readonly archiveUrl: string | null;
 
   @Column({ nullable: true })
-  archiveDate: Date | null;
+  readonly archiveDate: Date | null;
 
   @Column({ nullable: true })
-  revisionDate: Date | null;
+  readonly revisionDate: Date | null;
 
   @Column({ nullable: true })
-  revisionId: number | null;
+  readonly revisionId: number | null;
 
-  // @Column({
-  //   enum: SourceStatus,
-  //   enumName: 'source_status',
-  //   default: SourceStatus.PENDING,
-  // })
-  // status!: SourceStatus;
+  @Column({
+    enum: Source.Status,
+    enumName: 'source_status',
+    default: Source.Status.PENDING,
+  })
+  readonly status!: core.v1.Source_Status;
 
   @CreateDateColumn()
   readonly createdAt: Date;

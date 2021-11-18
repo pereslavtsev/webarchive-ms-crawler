@@ -13,6 +13,7 @@ specifiers:
   '@nestjs/config': ^1.0.2
   '@nestjs/core': ^8.0.0
   '@nestjs/event-emitter': ^1.0.0
+  '@nestjs/mapped-types': ^1.0.0
   '@nestjs/microservices': ^8.0.11
   '@nestjs/platform-express': ^8.0.0
   '@nestjs/schematics': ^8.0.0
@@ -53,6 +54,7 @@ specifiers:
   ts-node: ^10.0.0
   tsconfig-paths: ^3.10.1
   typeorm: ^0.2.38
+  typeorm-cursor-pagination: ^0.6.1
   typeorm-naming-strategies: ^2.0.0
   typescript: ^4.3.5
   url-parse: ^1.5.3
@@ -67,6 +69,7 @@ dependencies:
   '@nestjs/config': 1.0.2_591b56c4852c5782f3284e539347cdb9
   '@nestjs/core': 8.0.11_c21a8da1ca90982f68e27b07f07645fd
   '@nestjs/event-emitter': 1.0.0_f20e47d67426da10ee5b69ddcf5bb3b4
+  '@nestjs/mapped-types': 1.0.0_adbb9b2f1242eec30ffc45d4271d29d3
   '@nestjs/microservices': 8.0.11_4bdb8ed3dbc091befb2fc4e348925751
   '@nestjs/platform-express': 8.0.11_1b23cd5ccb3fa850be22a42de16aab17
   '@nestjs/typeorm': 8.0.2_1eee3da6c745669c5be60f946ac0e8d5
@@ -84,6 +87,7 @@ dependencies:
   rimraf: 3.0.2
   rxjs: 7.4.0
   typeorm: 0.2.38_pg@8.7.1
+  typeorm-cursor-pagination: 0.6.1_typeorm@0.2.38
   typeorm-naming-strategies: 2.0.0_typeorm@0.2.38
   url-parse: 1.5.3
 
@@ -1151,6 +1155,20 @@ packages:
       '@nestjs/common': 8.0.11_43f93dd897e68fe834a23ddd32fb54cc
       '@nestjs/core': 8.0.11_c21a8da1ca90982f68e27b07f07645fd
       eventemitter2: 6.4.4
+      reflect-metadata: 0.1.13
+    dev: false
+
+  /@nestjs/mapped-types/1.0.0_adbb9b2f1242eec30ffc45d4271d29d3:
+    resolution: {integrity: sha512-26AW5jHadLXtvHs+M+Agd9KZ92dDlBrmD0rORlBlvn2KvsWs4JRaKl2mUsrW7YsdZeAu3Hc4ukqyYyDdyCmMWQ==}
+    peerDependencies:
+      '@nestjs/common': ^7.0.8 || ^8.0.0
+      class-transformer: ^0.2.0 || ^0.3.0 || ^0.4.0
+      class-validator: ^0.11.1 || ^0.12.0 || ^0.13.0
+      reflect-metadata: ^0.1.12
+    dependencies:
+      '@nestjs/common': 8.0.11_43f93dd897e68fe834a23ddd32fb54cc
+      class-transformer: 0.4.0
+      class-validator: 0.13.1
       reflect-metadata: 0.1.13
     dev: false
 
@@ -6984,6 +7002,14 @@ packages:
 
   /typedarray/0.0.6:
     resolution: {integrity: sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=}
+    dev: false
+
+  /typeorm-cursor-pagination/0.6.1_typeorm@0.2.38:
+    resolution: {integrity: sha512-lqlvXBG2prsYFsBVZrWz2/wgoAcYzWCks/EMxP4wIVTISEO70dHQtQuaWWQP528lnW+rQNRwIK8sUuXMKJKavw==}
+    peerDependencies:
+      typeorm: ^0.2
+    dependencies:
+      typeorm: 0.2.38_pg@8.7.1
     dev: false
 
   /typeorm-naming-strategies/2.0.0_typeorm@0.2.38:

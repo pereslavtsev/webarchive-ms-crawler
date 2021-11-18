@@ -8,6 +8,10 @@ import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { Task } from '../models';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Source } from '@core/sources';
+import { isMainThread } from 'worker_threads';
+import { buildPaginator } from 'typeorm-cursor-pagination';
+import { ListTasksDto } from '../dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class TasksService extends LoggableProvider implements OnModuleInit {
@@ -22,13 +26,15 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.tasksRepository.delete({});
+    if (isMainThread) {
+      await this.tasksRepository.delete({});
+    }
   }
 
   async create(pageId: ApiPage['pageid']): Promise<Task> {
     const task = await this.tasksRepository.save({ pageId });
     this.eventEmitter.emit('task.created', task);
-    return task;
+    return plainToClass(Task, task);
   }
 
   async addSources(
@@ -56,24 +62,52 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
 
   async setFailed(taskId: Task['id']): Promise<Task> {
     const task = await this.setStatus(taskId, Task.Status.FAILED);
-    this.eventEmitter.emit('task.failed');
+    this.eventEmitter.emit('task.failed', task);
     return task;
   }
 
   async setSkipped(taskId: Task['id']): Promise<Task> {
     const task = await this.setStatus(taskId, Task.Status.SKIPPED);
-    this.eventEmitter.emit('task.skipped');
+    this.eventEmitter.emit('task.skipped', task);
+    return task;
+  }
+
+  async setCancelled(taskId: Task['id']): Promise<Task> {
+    const task = await this.setStatus(taskId, Task.Status.CANCELLED);
+    this.eventEmitter.emit('task.cancelled', task);
     return task;
   }
 
   async setAccepted(taskId: Task['id']): Promise<Task> {
     const task = await this.setStatus(taskId, Task.Status.ACCEPTED);
-    this.eventEmitter.emit('task.accepted');
+    this.eventEmitter.emit('task.accepted', task);
+    return task;
+  }
+
+  async setMatched(taskId: Task['id']): Promise<Task> {
+    const task = await this.setStatus(taskId, Task.Status.MATCHED);
+    this.eventEmitter.emit('task.matched', task);
     return task;
   }
 
   async findById(taskId: Task['id']) {
     return this.tasksRepository.findOneOrFail(taskId);
+  }
+
+  findAll({ pageSize, pageToken }: ListTasksDto) {
+    const queryBuilder = this.tasksRepository.createQueryBuilder('task');
+
+    const paginator = buildPaginator({
+      entity: Task,
+      paginationKeys: ['id'],
+      query: {
+        limit: pageSize,
+        order: 'DESC',
+        afterCursor: pageToken,
+      },
+    });
+
+    return paginator.paginate(queryBuilder);
   }
 
   // createByPage(page: ApiPage): Task {
