@@ -26,6 +26,10 @@ export class OnTask {
     return this.createDecorator('accepted');
   }
 
+  static Cancelled() {
+    return this.createDecorator('cancelled');
+  }
+
   static Failed() {
     return this.createDecorator('failed');
   }

@@ -45,7 +45,7 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
   async onModuleInit() {
     if (isMainThread) {
       await this.templatesRepository.delete({});
-      const template = await this.create('cite web', {
+      await this.create('cite web', {
         titleParam: 'title',
         titleParamAliases: ['заголовок'],
         defaultUrlParam: 'url',
@@ -55,7 +55,6 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
         deadUrlParam: 'deadlink',
         deadParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
       });
-      //console.log('template', template);
     }
   }
 

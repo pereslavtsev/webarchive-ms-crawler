@@ -31,7 +31,10 @@ export class AnalyzerConsumer extends LoggableProvider {
   }
 
   @OnQueueActive()
-  handleStarted(job: AnalyzerJob) {}
+  handleStarted(job: AnalyzerJob) {
+    const log = this.log.child({ reqId: job.id });
+    log.debug('analyzing page...');
+  }
 
   @OnQueueCompleted()
   async handleCompleted(job: AnalyzerJob, task: Task) {

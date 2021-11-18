@@ -16,7 +16,15 @@ export class MatcherListener extends LoggableProvider {
   }
 
   @OnTask.Accepted()
-  protected async handleTaskAcceptedEvent(task: Task) {
+  async handleTaskAcceptedEvent(task: Task): Promise<void> {
     await this.matcherQueue.add({ task }, { jobId: task.id });
+  }
+
+  @OnTask.Cancelled()
+  async handleTaskCancelledEvent(task: Task): Promise<void> {
+    const job = await this.matcherQueue.getJob(task.id);
+    if (job) {
+      await job.discard();
+    }
   }
 }

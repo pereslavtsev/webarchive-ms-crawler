@@ -21,8 +21,11 @@ export class AnalyzerListener extends LoggableProvider {
   }
 
   @OnTask.Skipped()
-  async handleTaskSkippedEvent(task: Task) {
+  @OnTask.Cancelled()
+  async handleTaskSkippedOrCancelledEvent(task: Task) {
     const job = await this.analyzerQueue.getJob(task.id);
-    await job.discard();
+    if (job) {
+      await job.discard();
+    }
   }
 }
