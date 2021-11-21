@@ -38,13 +38,11 @@ export class MatcherService extends LoggableProvider {
             switch (message.cmd) {
               case 'matched': {
                 const { revision } = message.data;
-                await Promise.all([
-                  this.sourcesService.setMatched(message.sourceId),
-                  this.sourcesService.updateById(message.sourceId, {
-                    revisionId: revision.revid,
-                    revisionDate: new this.bot.date(revision.timestamp),
-                  }),
-                ]);
+                await this.sourcesService.updateById(message.sourceId, {
+                  revisionId: revision.revid,
+                  revisionDate: new this.bot.date(revision.timestamp),
+                });
+                await this.sourcesService.setMatched(message.sourceId);
                 matched++;
                 const unmatchedPercents = (
                   (matched / task.sources.length) *
@@ -64,6 +62,7 @@ export class MatcherService extends LoggableProvider {
           });
       });
     } else {
+      const log = this.log.child({ reqId: task.id });
       const { pageId, revisionId, sources } = task;
 
       const sourcesMap = new Map<Source['url'], Source>();
@@ -80,6 +79,7 @@ export class MatcherService extends LoggableProvider {
         rvlimit: 'max',
         rvprop: ['ids', 'content', 'timestamp'],
       })) {
+        log.debug('received', query.pages[0].revisions.length);
         const [page] = query.pages as ApiPage[];
         const { revisions } = page;
 

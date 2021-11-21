@@ -49,6 +49,17 @@ export class TasksController
   }
 
   @UsePipes(new ValidationPipe())
+  getTaskStream({ id }: GetTaskDto): Observable<core.v1.Task> {
+    if (!this.subscriptions.has(id)) {
+      this.subscriptions.set(id, new Subject());
+    }
+
+    const subject = this.subscriptions.get(id);
+
+    return subject.asObservable();
+  }
+
+  @UsePipes(new ValidationPipe())
   createTaskStream({ pageId }: CreateTaskDto): Observable<core.v1.Task> {
     const subject = new Subject<core.v1.Task>();
 

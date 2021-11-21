@@ -31,7 +31,13 @@ export class TemplateSettings {
   readonly archiveUrlParam: string;
 
   @Column({ type: 'varchar', array: true, nullable: true })
-  readonly archiveParamAliases: string[] | null;
+  readonly archiveUrlParamAliases: string[] | null;
+
+  @Column({ nullable: true })
+  readonly archiveDateParam: string | null;
+
+  @Column({ type: 'varchar', array: true, nullable: true })
+  readonly archiveDateParamAliases: string[] | null;
 
   @Column({ nullable: true })
   readonly deadUrlParam: string | null;

@@ -70,6 +70,7 @@ export class Source {
 
   @ManyToOne(() => Template, (template) => template.sources, {
     onDelete: 'SET NULL',
+    eager: true,
   })
   readonly template: Template;
 }

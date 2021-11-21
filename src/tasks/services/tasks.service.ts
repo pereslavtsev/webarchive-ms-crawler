@@ -27,7 +27,7 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
 
   async onModuleInit() {
     if (isMainThread) {
-      await this.tasksRepository.delete({});
+      //await this.tasksRepository.delete({});
     }
   }
 
@@ -35,6 +35,76 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
     const task = await this.tasksRepository.save({ pageId });
     this.eventEmitter.emit('task.created', task);
     return plainToClass(Task, task);
+  }
+
+  async checkAllForArchived(): Promise<Task[]> {
+    const tasks = plainToClass(
+      Task,
+      await this.tasksRepository.find({
+        where: {
+          status: Task.Status.MATCHED,
+        },
+      }),
+    );
+
+    const archivedTasks = tasks.filter((task) => {
+      const { sources } = task;
+
+      return sources.every((source) => {
+        const { status } = source;
+
+        switch (status) {
+          case Source.Status.ARCHIVED:
+          case Source.Status.FAILED:
+          case Source.Status.MISMATCHED: {
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
+      });
+    });
+
+    await this.tasksRepository.save(
+      archivedTasks.map((task) => ({ ...task, status: Task.Status.ARCHIVED })),
+    );
+
+    return this.tasksRepository.find({
+      where: {
+        status: Task.Status.ARCHIVED,
+      },
+    });
+  }
+
+  async checkForArchived(taskId: Task['id']): Promise<Task | null> {
+    const { sources, ...task } = await this.findById(taskId);
+
+    const isArchived = sources.every((source) => {
+      const { status } = source;
+
+      switch (status) {
+        case Source.Status.ARCHIVED:
+        case Source.Status.FAILED:
+        case Source.Status.MISMATCHED: {
+          return true;
+        }
+        default: {
+          return false;
+        }
+      }
+    });
+
+    if (!isArchived || task.status !== Task.Status.MATCHED) {
+      return null;
+    }
+
+    const updatedTask = await this.tasksRepository.save({
+      ...task,
+      status: Task.Status.ARCHIVED,
+    });
+
+    return { ...updatedTask, sources };
   }
 
   async addSources(
@@ -91,6 +161,16 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
     const task = await this.setStatus(taskId, Task.Status.MATCHED);
     this.eventEmitter.emit('task.matched', task);
     return task;
+  }
+
+  async setDone(taskId: Task['id'], newRevisionId: number): Promise<Task> {
+    const task = await this.setStatus(taskId, Task.Status.DONE);
+    const updatedTask = await this.tasksRepository.save({
+      ...task,
+      newRevisionId,
+    });
+    this.eventEmitter.emit('task.done', updatedTask);
+    return updatedTask;
   }
 
   async findById(taskId: Task['id']): Promise<Task> {

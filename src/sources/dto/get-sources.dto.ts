@@ -1,8 +1,7 @@
 import type { core } from '@webarchiver/protoc';
-import { IsUUID } from 'class-validator';
-import type { Task } from '@core/tasks';
+import { PickType } from '@nestjs/mapped-types';
+import { Source } from '@core/sources';
 
-export class GetSourcesDto implements core.v1.GetSourcesRequest {
-  @IsUUID()
-  readonly taskId: Task['id'];
-}
+export class GetSourcesDto
+  extends PickType(Source, ['taskId'] as const)
+  implements core.v1.GetSourcesRequest {}

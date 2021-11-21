@@ -1,1 +1,1 @@
-// export * from './writer.consumer';
+export * from './writer.consumer';

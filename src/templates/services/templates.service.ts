@@ -16,12 +16,13 @@ function extractName(fullTitle: string) {
 type ListAliases = Template['aliases'][];
 type CreateSettings = Pick<
   Settings,
-  'defaultUrlParam' | 'archiveUrlParam' | 'titleParam'
+  'defaultUrlParam' | 'archiveUrlParam' | 'titleParam' | 'archiveDateParam'
 > &
   Partial<
     Pick<
       Settings,
-      | 'archiveParamAliases'
+      | 'archiveUrlParamAliases'
+      | 'archiveDateParamAliases'
       | 'deadParamAliases'
       | 'urlParamAliases'
       | 'deadUrlParam'
@@ -44,14 +45,16 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
 
   async onModuleInit() {
     if (isMainThread) {
-      await this.templatesRepository.delete({});
+      //await this.templatesRepository.delete({});
       await this.create('cite web', {
         titleParam: 'title',
         titleParamAliases: ['заголовок'],
         defaultUrlParam: 'url',
         urlParamAliases: ['url', 'ссылка'],
         archiveUrlParam: 'archive-url',
-        archiveParamAliases: ['archive-url', 'archiveurl'],
+        archiveUrlParamAliases: ['archive-url', 'archiveurl', 'URL архивной копии'],
+        archiveDateParam: 'archive-date',
+        archiveDateParamAliases: ['дата архивирования', 'archivedate'],
         deadUrlParam: 'deadlink',
         deadParamAliases: ['мёртвая ссылка', 'deadlink', 'deadurl', 'dead-url'],
       });
@@ -79,14 +82,6 @@ export class TemplatesService extends LoggableProvider implements OnModuleInit {
 
   async findById(templateId: Template['id']) {
     return this.templatesRepository.findOneOrFail(templateId);
-  }
-
-  async findByName(title: Template['title']) {
-    return this.templatesRepository.findOneOrFail({
-      where: {
-        title,
-      },
-    });
   }
 
   async findAll() {

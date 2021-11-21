@@ -75,8 +75,8 @@ export class AnalyzerService extends LoggableProvider {
           return false;
         }
 
-        const { archiveUrlParam, archiveParamAliases } = settings;
-        const isArchived = [archiveUrlParam, ...archiveParamAliases].some(
+        const { archiveUrlParam, archiveUrlParamAliases } = settings;
+        const isArchived = [archiveUrlParam, ...archiveUrlParamAliases].some(
           (param) => !!template.getValue(param),
         );
 

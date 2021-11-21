@@ -30,24 +30,11 @@ export class OnTask {
     return this.createDecorator('cancelled');
   }
 
+  static Archived() {
+    return this.createDecorator('archived');
+  }
+
   static Failed() {
     return this.createDecorator('failed');
   }
-}
-
-// Events
-export function OnSourceArchived() {
-  return OnEvent('source.archived');
-}
-
-export function OnSourceChecked() {
-  return OnEvent('source.checked');
-}
-
-export function OnSourceFailed() {
-  return OnEvent('source.failed');
-}
-
-export function OnSourceMatched() {
-  return OnEvent('source.matched');
 }

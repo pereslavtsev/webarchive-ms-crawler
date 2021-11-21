@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Task } from '@core/tasks';
 import { plainToClass } from 'class-transformer';
+import { ArchiveSourceDto } from '../dto';
 
 @Injectable()
 export class SourcesService extends LoggableProvider {
@@ -45,6 +46,18 @@ export class SourcesService extends LoggableProvider {
       ...data,
     });
     return plainToClass(Source, updatedSource);
+  }
+
+  async archive(
+    sourceId: Source['id'],
+    data: Omit<ArchiveSourceDto, 'id'>,
+  ): Promise<Source> {
+    const source = await this.updateById(sourceId, {
+      ...data,
+      status: Source.Status.ARCHIVED,
+    });
+    this.eventEmitter.emit('source.archived', source);
+    return source;
   }
 
   protected async setStatus(

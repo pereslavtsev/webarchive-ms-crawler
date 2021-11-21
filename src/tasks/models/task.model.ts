@@ -28,6 +28,9 @@ export class Task {
   @Column({ type: 'numeric', nullable: true })
   readonly revisionId!: ApiRevision['revid'];
 
+  @Column({ type: 'numeric', nullable: true })
+  readonly newRevisionId!: ApiRevision['revid'];
+
   @Column({
     enum: Task.Status,
     enumName: 'task_status',

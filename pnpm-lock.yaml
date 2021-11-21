@@ -45,6 +45,7 @@ specifiers:
   nest-mwn: ^1.0.0
   pg: ^8.7.1
   prettier: ^2.3.2
+  python-shell: ^3.0.1
   reflect-metadata: ^0.1.13
   rimraf: ^3.0.2
   rxjs: ^7.2.0
@@ -83,6 +84,7 @@ dependencies:
   mwn: 1.11.4
   nest-mwn: 1.0.0_b49a02b91e9edeb444c8e970d60cccb4
   pg: 8.7.1
+  python-shell: 3.0.1
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
   rxjs: 7.4.0
@@ -5943,6 +5945,11 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       escape-goat: 2.1.1
+    dev: false
+
+  /python-shell/3.0.1:
+    resolution: {integrity: sha512-TWeotuxe1auhXa5bGRScxnc2J+0r41NBntSa6RYZtMBLtAEsvCboKrEbW6DvASosWQepVkhZZlT3B5Ei766G+Q==}
+    engines: {node: '>=0.10'}
     dev: false
 
   /q/1.5.1:

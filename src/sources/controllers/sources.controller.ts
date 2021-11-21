@@ -2,12 +2,13 @@ import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
 import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { core } from '@webarchiver/protoc';
 import { from, Observable, Subject } from 'rxjs';
-import { GetSourcesDto } from '../dto';
+import { ArchiveSourceDto, GetSourcesDto } from '../dto';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { SourcesService } from '../services';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Source } from '@core/sources';
 import { Task } from '@core/tasks';
+import { plainToClass } from 'class-transformer';
 
 const { SourcesServiceControllerMethods } = core.v1;
 
@@ -32,9 +33,11 @@ export class SourcesController
   @OnEvent('source.*')
   handleSourcesEvents(source: Source) {
     const subject = this.subscriptions.get(source.taskId);
+
     if (!subject) {
       return;
     }
+
     subject.next(source);
   }
 
@@ -68,5 +71,13 @@ export class SourcesController
       sources.forEach((source) => subject.next(source));
     });
     return subject.asObservable();
+  }
+
+  @UsePipes(new ValidationPipe())
+  archiveSource({ id, ...data }: ArchiveSourceDto): Promise<core.v1.Source> {
+    return this.sourcesService.archive(
+      id,
+      plainToClass(ArchiveSourceDto, data),
+    );
   }
 }
