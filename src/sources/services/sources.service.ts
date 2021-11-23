@@ -78,6 +78,12 @@ export class SourcesService extends LoggableProvider {
     return source;
   }
 
+  async discard(sourceId: Source['id']): Promise<Source> {
+    const source = await this.setStatus(sourceId, Source.Status.DISCARDED);
+    this.eventEmitter.emit('source.discarded', source);
+    return source;
+  }
+
   // create(template: Template, content: string): Source {
   //   const source = new Source();
   //   source.url = this.citeTemplatesService.getUrlValue(template);

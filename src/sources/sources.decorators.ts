@@ -17,4 +17,12 @@ export class OnSource {
   static Archived() {
     return this.createDecorator('archived');
   }
+
+  static Failed() {
+    return this.createDecorator('failed');
+  }
+
+  static Discarded() {
+    return this.createDecorator('discarded');
+  }
 }

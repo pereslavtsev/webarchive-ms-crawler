@@ -2,7 +2,7 @@ import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
 import { LoggableProvider } from '@pereslavtsev/webarchiver-misc';
 import { core } from '@webarchiver/protoc';
 import { from, Observable, Subject } from 'rxjs';
-import { ArchiveSourceDto, GetSourcesDto } from '../dto';
+import { ArchiveSourceDto, GetSourcesDto, DiscardSourceDto } from '../dto';
 import { Bunyan, RootLogger } from '@eropple/nestjs-bunyan';
 import { SourcesService } from '../services';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -79,5 +79,10 @@ export class SourcesController
       id,
       plainToClass(ArchiveSourceDto, data),
     );
+  }
+
+  @UsePipes(new ValidationPipe())
+  discardSource({ id }: DiscardSourceDto): Promise<core.v1.Source> {
+    return this.sourcesService.discard(id);
   }
 }

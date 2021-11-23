@@ -65,9 +65,9 @@ export class MatcherService extends LoggableProvider {
       const log = this.log.child({ reqId: task.id });
       const { pageId, revisionId, sources } = task;
 
-      const sourcesMap = new Map<Source['url'], Source>();
+      const sourcesMap = new Map<Source['id'], Source>();
 
-      sources.forEach((source) => sourcesMap.set(source.url, source));
+      sources.forEach((source) => sourcesMap.set(source.id, source));
 
       for await (const { query } of this.bot.continuedQueryGen({
         action: 'query',
@@ -97,9 +97,9 @@ export class MatcherService extends LoggableProvider {
 
           for (const source of sourcesMap.values()) {
             if (content.includes(source.url)) {
-              //console.log(source.url, revision.timestamp);
+              //log.debug(source.url, revision.timestamp);
 
-              sourcesMap.delete(source.url);
+              sourcesMap.delete(source.id);
 
               parentPort.postMessage({
                 cmd: 'matched',
@@ -108,6 +108,7 @@ export class MatcherService extends LoggableProvider {
               });
 
               if (!sourcesMap.size) {
+                //log.debug('all sources matched');
                 return;
               }
             }

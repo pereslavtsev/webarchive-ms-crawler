@@ -40,7 +40,9 @@ export class AnalyzerConsumer extends LoggableProvider {
   async handleCompleted(job: AnalyzerJob, task: Task) {
     const log = this.log.child({ reqId: job.id });
     log.debug('sources added', task.sources?.length || 0);
-    await this.tasksService.setAccepted(task.id);
+    if (task.sources?.length) {
+      await this.tasksService.setAccepted(task.id);
+    }
   }
 
   @OnQueueFailed()
