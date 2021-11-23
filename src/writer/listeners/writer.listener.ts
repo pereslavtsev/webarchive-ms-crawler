@@ -5,7 +5,7 @@ import { InjectWriterQueue } from '../writer.decorators';
 import { Queue } from 'bull';
 import { OnTask, Task, TasksService } from '@core/tasks';
 import { OnSource, Source } from '@core/sources';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class WriterListener
@@ -39,12 +39,24 @@ export class WriterListener
     await this.writerQueue.add(task, { jobId: task.id });
   }
 
-  @OnSource.Archived()
+  private x = 0;
+
+  @OnEvent('source.*')
   async handleSourceArchivedEvent(source: Source): Promise<void> {
-    const task = await this.tasksService.checkForArchived(source.taskId);
-    if (!task) {
-      return;
+    const { status } = source;
+
+    switch (status) {
+      case Source.Status.ARCHIVED:
+      case Source.Status.DISCARDED:
+      case Source.Status.FAILED: {
+        this.x++;
+        console.log('ccc', this.x);
+        const task = await this.tasksService.checkForArchived(source.taskId);
+        if (!task || task.status !== Task.Status.ARCHIVED) {
+          return;
+        }
+        this.eventEmitter.emit('task.archived', task);
+      }
     }
-    this.eventEmitter.emit('task.archived', task);
   }
 }

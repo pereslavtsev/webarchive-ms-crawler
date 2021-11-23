@@ -38,7 +38,39 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
   }
 
   async checkAllForArchived(): Promise<Task[]> {
-    const tasks = plainToClass(
+    let tasks = plainToClass(
+      Task,
+      await this.tasksRepository.find({
+        where: {
+          status: Task.Status.MATCHED,
+        },
+      }),
+    );
+
+    const failedTasks = tasks.filter((task) => {
+      const { sources } = task;
+
+      return sources.every((source) => {
+        const { status } = source;
+
+        switch (status) {
+          case Source.Status.FAILED:
+          case Source.Status.DISCARDED:
+          case Source.Status.MISMATCHED: {
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
+      });
+    });
+
+    await this.tasksRepository.save(
+      failedTasks.map((task) => ({ ...task, status: Task.Status.FAILED })),
+    );
+
+    tasks = plainToClass(
       Task,
       await this.tasksRepository.find({
         where: {
@@ -55,7 +87,7 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
 
         switch (status) {
           case Source.Status.ARCHIVED:
-          case Source.Status.FAILED:
+          case Source.Status.DISCARDED:
           case Source.Status.MISMATCHED: {
             return true;
           }
@@ -80,12 +112,12 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
   async checkForArchived(taskId: Task['id']): Promise<Task | null> {
     const { sources, ...task } = await this.findById(taskId);
 
-    const isArchived = sources.every((source) => {
+    const failed = sources.filter((source) => {
       const { status } = source;
 
       switch (status) {
-        case Source.Status.ARCHIVED:
         case Source.Status.FAILED:
+        case Source.Status.DISCARDED:
         case Source.Status.MISMATCHED: {
           return true;
         }
@@ -95,10 +127,42 @@ export class TasksService extends LoggableProvider implements OnModuleInit {
       }
     });
 
-    if (!isArchived || task.status !== Task.Status.MATCHED) {
+    if (failed.length === sources.length) {
+      this.log.debug(`mark as failed ${task.id}`);
+      const updatedTask = await this.tasksRepository.save({
+        ...task,
+        status: Task.Status.FAILED,
+      });
+
+      return { ...updatedTask, sources };
+    }
+
+    const archived = sources.filter((source) => {
+      const { status } = source;
+
+      switch (status) {
+        case Source.Status.ARCHIVED:
+        case Source.Status.DISCARDED:
+        case Source.Status.MISMATCHED: {
+          return true;
+        }
+        default: {
+          return false;
+        }
+      }
+    });
+
+    if (
+      archived.length !== sources.length ||
+      task.status !== Task.Status.MATCHED
+    ) {
+      this.log.debug(
+        `progress: ${archived.length} archived from ${sources.length} total, ${task.id}`,
+      );
       return null;
     }
 
+    this.log.debug(`mark as archived ${task.id}`);
     const updatedTask = await this.tasksRepository.save({
       ...task,
       status: Task.Status.ARCHIVED,
