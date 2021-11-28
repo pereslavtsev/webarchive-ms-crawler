@@ -1,9 +1,21 @@
 version: 2.1
 
 orbs:
+  python: circleci/python@1.5.0
   docker: circleci/docker@2.0.1
 
 jobs:
+  install_python_deps:
+    docker:
+      - image: circleci/python:3.8.12
+    steps:
+      - checkout
+      - python/install-packages:
+          pip-dependency-file: requirements.txt
+          pkg-manager: pip
+          args: --user
+      - run: ls -a
+
   build:
     docker:
       - image: circleci/node:14.18
@@ -22,7 +34,58 @@ jobs:
       - run: pnpm build
       - persist_to_workspace:
           root: .
-          paths: ['dist'] 
+          paths: ['dist']
+
+  test:
+    docker:
+      - image: circleci/node:14.18
+      - image: circleci/postgres:13.5-ram
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+      - image: circleci/redis:6.2.6-alpine3.14
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1/postgres
+    steps:
+      - run: curl -f https://get.pnpm.io/v6.16.js | sudo node - add --global pnpm@6
+      - run: pnpm config set store-dir .pnpm-store
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "pnpm-lock.yaml" }}
+            - v1-deps-
+      - run: pnpm i
+      - save_cache:
+          key: v1-deps-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - node_modules
+      - attach_workspace:
+          at: .
+      - run: sudo apt-get update
+      - run: sudo apt-get install postgresql-client
+      - run: whoami
+      - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: dd the Postgres 13.5 binaries to the path
+          command: echo 'export PATH=/usr/lib/postgresql/13.5/bin/:$PATH' >> $BASH_ENV
+      - run: |
+          psql \
+          -d $DATABASE_URL \
+          -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+      - run:
+          name: Run database migrations
+          command: pnpm migrations:run
+      - run:
+          name: Seed database
+          command: pnpm seed:run
           
 workflows:
   version: 2
@@ -34,9 +97,12 @@ workflows:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           tag: latest
           extra_build_args: '--build-arg GITHUB_TOKEN=$GITHUB_TOKEN'
+          filters:
+            branches:
+              only: master
   build_and_test:
     jobs:  
       - build
-#       - test:
-#           requires:
-#             - build
+       - test:
+           requires:
+             - build

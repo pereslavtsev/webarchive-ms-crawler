@@ -1,5 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from '@core/app.module';
 import { grpcClientOptions } from './grpc.options';
 import { GrpcLoggingInterceptor } from '@pereslavtsev/webarchiver-misc';
 import { Logger } from '@core/shared';
