@@ -1,1 +1,1 @@
-while !</dev/tcp/db/5432; do sleep 1; done; make migrations-run && node dist/main
+while !</dev/tcp/db/5432; do sleep 1; done; make migrations-run && make seed-run && node dist/main
