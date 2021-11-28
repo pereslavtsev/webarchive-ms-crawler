@@ -34,7 +34,7 @@ jobs:
       - run: pnpm build
       - persist_to_workspace:
           root: .
-          paths: ['dist']
+          paths: ['dist', 'node_modules']
 
   test:
     docker:
@@ -48,18 +48,7 @@ jobs:
     environment:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1/postgres
     steps:
-      - run: curl -f https://get.pnpm.io/v6.16.js | sudo node - add --global pnpm@6
-      - run: pnpm config set store-dir .pnpm-store
       - checkout
-      - restore_cache:
-          keys:
-            - v1-deps-{{ checksum "pnpm-lock.yaml" }}
-            - v1-deps-
-      - run: pnpm i
-      - save_cache:
-          key: v1-deps-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
       - attach_workspace:
           at: .
       - run: sudo apt-get update
