@@ -23,7 +23,7 @@ export class Template {
   readonly title: string;
 
   @Column({ type: 'varchar', array: true, nullable: true })
-  readonly aliases: [];
+  readonly aliases: string[];
 
   @Column()
   readonly titleParam: string;
